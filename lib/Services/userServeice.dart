@@ -9,11 +9,11 @@ class UserService{
   String loginRequest = '/login';
   String emailRequest = '/send-email';
   String emailpasswordRequest = '/send-email-password';
-  String confirmAccountRequest = '/resetpassword/';
+  String confirmAccountRequest = '/resetpassword';
   String logoutRequest = '/logout';
 
   registerUser(data) async {
-    var fullUrl = callapi.getUrl() + registerRequest + await callapi.getToken();
+    var fullUrl = callapi.getUrl() + registerRequest;
     return await http.post(
         Uri.parse(fullUrl),
         body: jsonEncode(data),
@@ -22,7 +22,7 @@ class UserService{
   }
 
   loginUser(data) async {
-    var fullUrl = callapi.getUrl() + loginRequest + await callapi.getToken();
+    var fullUrl = callapi.getUrl() + loginRequest;
     return await http.post(
         Uri.parse(fullUrl),
         body: jsonEncode(data),
@@ -40,7 +40,7 @@ class UserService{
   }
 
   sendmailToConfirmAccount(data) async {
-    var fullUrl = callapi.getUrl() + emailpasswordRequest + await callapi.getToken();
+    var fullUrl = callapi.getUrl() + emailpasswordRequest;
     return await http.post(
         Uri.parse(fullUrl),
         body: jsonEncode(data),
@@ -50,7 +50,7 @@ class UserService{
 
 
   resetPassword(data, String id) async {
-    var fullUrl = callapi.getUrl() + confirmAccountRequest + id + await callapi.getToken();
+    var fullUrl = callapi.getUrl() + confirmAccountRequest + "/$id";
     return await http.put(
         Uri.parse(fullUrl),
         body: jsonEncode(data),

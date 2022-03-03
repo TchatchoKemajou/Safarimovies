@@ -17,6 +17,7 @@ class ForgetPassword extends StatefulWidget {
 
 class _ForgetPasswordState extends State<ForgetPassword> {
   final _formKey = GlobalKey<FormState>();
+  String email = "";
 
   @override
   Widget build(BuildContext context) {
@@ -139,16 +140,16 @@ class _ForgetPasswordState extends State<ForgetPassword> {
           Center(
             child: ElevatedButton(
               onPressed: () async{
-                // if(_formKey.currentState!.validate()){
-                //   await userprovider.sendmailToUserPassword();
-                //   if(userprovider.loginMessage == "error"){
-                //     String message = "cette addresse email n'exsiste pas ou est incorrect";
-                //     errorMessage(message);
-                //   }else{
-                //     Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "changepassword",)));
-                //   }
-                // }
-                Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "changepassword",)));
+                if(_formKey.currentState!.validate()){
+                  await userprovider.sendmailToUserPassword();
+                  if(userprovider.emailMessage == "error"){
+                    String message = "email n'exsiste pas";
+                    errorMessage(message);
+                  }else{
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "changepassword",)));
+                  }
+                }
+               // Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "changepassword",)));
               },
 
               child: Text(

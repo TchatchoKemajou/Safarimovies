@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:safarimovie/Pages/Auth/changepassword.dart';
 import 'package:safarimovie/Pages/Auth/login.dart';
 import 'package:safarimovie/Pages/Auth/register.dart';
+import 'package:safarimovie/Pages/detail.dart';
+import 'package:safarimovie/Providers/videosProvider.dart';
 
 import 'Pages/homepages.dart';
 import 'Providers/userProvider.dart';
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<UserProvider>(create: (_) => UserProvider()),
+        Provider<VideosProviders>(create: (_) => VideosProviders()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

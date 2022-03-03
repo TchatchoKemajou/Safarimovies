@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
+import 'package:safarimovie/Api/safariapi.dart';
 import 'package:safarimovie/Pages/Auth/changepassword.dart';
 import 'package:safarimovie/Pages/homepages.dart';
 import 'package:safarimovie/Providers/userProvider.dart';
@@ -18,11 +19,13 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  //String otpvalue = "";
+  SafariApi safariapi = SafariApi();
+  String otpvalue = "";
   bool iscorrect = false, isValide = false;
   @override
   Widget build(BuildContext context) {
     final userprovider = Provider.of<UserProvider>(context,);
+    print(widget.otp);
     return Scaffold(
       backgroundColor: fisrtcolor,
       appBar: AppBar(
@@ -84,45 +87,61 @@ class _OtpScreenState extends State<OtpScreen> {
               //errorAnimationController: errorController,
               //controller: textEditingController,
               onCompleted: (value) async{
-                if(value == widget.otp){
-                  setState(() {
-                    isValide = true;
-                  });
-                  if(widget.action == "register"){
-                    await userprovider.createAccount();
-                    print(userprovider.registerMessage);
-                    if(userprovider.registerMessage == "success"){
-                      userprovider.loginToAccount();
-                      print(userprovider.loginMessage);
-                      if(userprovider.loginMessage == "success"){
-                        setState(() {
-                          isValide = false;
-                        });
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                        Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
-                      }
-                    }
-                  }else{
-                    setState(() {
-                      isValide = false;
-                    });
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ChangePassWord()));
-                  }
-                }else{
-                  setState(() {
-                    iscorrect = true;
-                  });
-                }
+                // if(value == widget.otp){
+                //     await userprovider.createAccount();
+                //     print(userprovider.registerMessage);
+                //     if(userprovider.registerMessage == "success"){
+                //       userprovider.loginToAccount();
+                //       print(userprovider.loginMessage);
+                //       if(userprovider.loginMessage == "success"){
+                //         // setState(() {
+                //         //   isValide = false;
+                //         // });
+                //         safariapi.setToken(userprovider.token);
+                //         Navigator.of(context).pop();
+                //         Navigator.of(context).pop();
+                //         Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
+                //       }
+                //     }
+                //   // setState(() {
+                //   //   isValide = true;
+                //   // });
+                //   // if(widget.action == "register"){
+                //   //   await userprovider.createAccount();
+                //   //   print(userprovider.registerMessage);
+                //   //   if(userprovider.registerMessage == "success"){
+                //   //     userprovider.loginToAccount();
+                //   //     print(userprovider.loginMessage);
+                //   //     if(userprovider.loginMessage == "success"){
+                //   //       // setState(() {
+                //   //       //   isValide = false;
+                //   //       // });
+                //   //       safariapi.setToken(userprovider.token);
+                //   //       Navigator.of(context).pop();
+                //   //       Navigator.of(context).pop();
+                //   //       Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
+                //   //     }
+                //   //   }
+                //   // }else{
+                //   //   // setState(() {
+                //   //   //   isValide = false;
+                //   //   // });
+                //   //   Navigator.of(context).pop();
+                //   //   Navigator.of(context).pop();
+                //   //   Navigator.of(context).pop();
+                //   //   Navigator.push(context, MaterialPageRoute(builder: (context) => ChangePassWord()));
+                //   // }
+                // }else{
+                //   setState(() {
+                //     iscorrect = true;
+                //   });
+                // }
               },
               onChanged: (value) {
-                // print(value);
-                // setState(() {
-                //   otpvalue = value;
-                // });
+                print(value);
+                setState(() {
+                  otpvalue = value;
+                });
               },
               beforeTextPaste: (text) {
                 print("Allowing to paste $text");
@@ -133,39 +152,28 @@ class _OtpScreenState extends State<OtpScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                isValide == true ? smallButton() :ElevatedButton(
+                ElevatedButton(
                   onPressed: () async{
-                    // if(otpvalue == widget.otp){
-                    //   if(widget.action == "register"){
-                    //     await userprovider.createAccount();
-                    //     print(userprovider.registerMessage);
-                    //     if(userprovider.registerMessage == "success"){
-                    //       userprovider.loginToAccount();
-                    //       print(userprovider.loginMessage);
-                    //       if(userprovider.loginMessage == "success"){
-                    //         Navigator.of(context).pop();
-                    //         Navigator.of(context).pop();
-                    //         Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
-                    //       }
-                    //     }
-                    //   }else{
-                    //
-                    //   }
-                    // }else{
-                    //   setState(() {
-                    //     iscorrect = true;
-                    //   });
-                    // }
-                    // bool isvalide = validateOtp(code);
-                    // await userprovider.validatePin();
-                    // if(userprovider.pinMessage == "success"){
-                    //   Navigator.of(context).pop();
-                    //   Navigator.of(context).push(
-                    //     MaterialPageRoute(builder: (_) => Register(phone: widget.phoneasVerified, prefix: widget.prefix,)),
-                    //   );
-                    // }else{
-                    //   //Toast.show("code incorrect!" , context, duration: Toast.LENGTH_SHORT, gravity:  Toast.TOP);
-                    // }
+                    if(otpvalue == widget.otp){
+                      if(widget.action == "register"){
+                        await userprovider.createAccount();
+                        if(userprovider.registerMessage == "success"){
+                          userprovider.loginToAccount();
+                          print(userprovider.loginMessage);
+                          if(userprovider.loginMessage == "success"){
+                            // setState(() {
+                            //   isValide = false;
+                            // });
+                            safariapi.setToken(userprovider.token);
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                            Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
+                          }
+                        }else{
+
+                        }
+                      }
+                    }
                   },
                   child: Text(
                     "Valider",

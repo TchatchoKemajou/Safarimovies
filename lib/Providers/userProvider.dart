@@ -83,6 +83,19 @@ class UserProvider with ChangeNotifier{
     };
   }
 
+  Map<String, dynamic> tomapreset(){
+    return {
+      "password": _password,
+      "password_confirmation": _password
+    };
+  }
+
+  Map<String, dynamic> tomappass(){
+    return {
+      "password": _password
+    };
+  }
+
   Map<String, dynamic> tomapsendMail(){
     return {
       "email": _email,
@@ -90,38 +103,47 @@ class UserProvider with ChangeNotifier{
     };
   }
 
-  loadUser(Users user){
-    _id = user.userId;
-    _name = user.userName;
-    _email = user.userMail;
-    _password = user.userPassword;
-    _type = user.userType;
+  loadUser(dynamic user){
+    _id = user["id"].toString();
+    _name = user["name"];
+    _email = user["email"];
+    _type = user["type"].toString();
+    notifyListeners();
   }
 
   loginToAccount() async{
     var res = await userService.loginUser(tomaplogin());
     var body = json.decode(res.body);
-    if(body == "Password mismatch"){
-      _loginMessage = "Email ou Mot de passe incorrect";
-    }
-    if(body == "User does not exist"){
-      _loginMessage = "Identifiant non valide";
-    }
-    else{
+    // if(body == "Password mismatch"){
+    //   _loginMessage = "Email ou Mot de passe incorrect";
+    // }
+    // if(body == "User does not exist"){
+    //   _loginMessage = "Identifiant non valide";
+    // }
+    // else{
+    //   _loginMessage = "success";
+    // }
+    if(body["message"] == "success"){
       _loginMessage = "success";
+      var tk = body["access_token"]["token"];
+      print(tk);
+      _token = tk.toString();
+      notifyListeners();
+      print(body["user"]["name"]);
+      print(body["user"]["email"]);
+    }else{
+      _loginMessage = "Email ou Mot de passe incorrect";
+      notifyListeners();
     }
     //_loginMessage = body["message"];
-    notifyListeners();
-    var tk = body["token"];
-    _token = tk.toString();
-    print(body["user"]["name"]);
-    print(body["user"]["email"]);
     //notifyListeners();
   }
 
   createAccount() async{
+    print(tomapregister());
     var res = await userService.registerUser(tomapregister());
     var body = json.decode(res.body);
+    print(body["message"]);
     _registerMessage = body["message"];
     notifyListeners();
   }
@@ -143,33 +165,40 @@ class UserProvider with ChangeNotifier{
 
   sendmailToUserPassword() async{
     Changecode = generateOtp();
+    print(tomapsendMail());
     var res = await userService.sendmailToConfirmAccount(tomapsendMail());
-    var body = json.decode(res);
-    if(body["message"]){
+    var body = json.decode(res.body);
+    //print(body);
+   //_emailMessage = "success";
+   //  notifyListeners();
+   //  loadUser(body);
+    if(body["message"] != null){
       _emailMessage = "error";
       notifyListeners();
     }
     else{
-      Users user = Users.fromjson(body);
-      loadUser(user);
       _emailMessage = "success";
       notifyListeners();
+      loadUser(body);
+      //print(id + name);
     }
   }
 
   sendresetPassword() async{
-    var res = await userService.resetPassword(tomaplogin(), id);
-    var body = json.decode(res);
-    if(body["user"]){
-      _registerMessage = "success";
-    }else{
+    var res = await userService.resetPassword(tomapreset(), id);
+    var body = json.decode(res.body);
+    print(res);
+    print(body);
+    if(body["errors"] != null){
       _registerMessage = "error";
+    }else{
+      _registerMessage = "success";
     }
   }
 
   logAccountUser() async{
     var res = await userService.logout();
-    var body = json.decode(res);
+    var body = json.decode(res.body);
     if(body == "You have been successfully logged out!"){
       SafariApi().deleteToken();
       _loginMessage = "success";

@@ -216,11 +216,12 @@ class _LoginState extends State<Login> {
                   await userprovider.loginToAccount();
                   print(userprovider.loginMessage);
                   if(userprovider.loginMessage == "success"){
-                    safariapi.setToken(userprovider.token);
+                    print(userprovider.token);
+                    await safariapi.setToken(userprovider.token);
                     Navigator.of(context).pop();
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
                   }else{
-                   // print("mot de passe incorrect");
+                    print("mot de passe incorrect");
                     errorMessage(userprovider.loginMessage);
                   }
                 }
