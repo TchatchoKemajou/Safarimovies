@@ -2,6 +2,7 @@
     package="com.example.safarimovie">
     <uses-permission android:name="android.permission.INTERNET"/>
    <application
+       android:usesCleartextTraffic="true"
         android:label="safarimovie"
         android:icon="@mipmap/ic_launcher">
         <activity

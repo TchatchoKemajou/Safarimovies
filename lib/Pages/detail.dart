@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:safarimovie/Api/safariapi.dart';
+import 'package:safarimovie/Pages/Lecteurs/playvideo.dart';
 import 'package:safarimovie/Providers/videosProvider.dart';
 
 import '../constantes.dart';
@@ -180,7 +181,9 @@ class _DetailPageState extends State<DetailPage> {
                           Icons.play_arrow,
                           color: Colors.white,
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => PlayVideoPage(video: widget.film)));
+                        },
                         // color: thirdcolor,
                       ),
                     ),
