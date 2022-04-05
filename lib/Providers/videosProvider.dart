@@ -22,8 +22,16 @@ class VideosProviders with ChangeNotifier{
   String? _videoLangue;
   dynamic _movies;
   late bool _similaire = true;
-  bool _isfavori = false;
+  String _isfavori = "faux";
+  String? _ifAddorRetrive;
   List<String>? _saison;
+
+  String get ifAddorRetrive => _ifAddorRetrive!;
+
+  set ChangeifAddorRetrive(String value) {
+    _ifAddorRetrive = value;
+    notifyListeners();
+  }
 
   List<String> get saison => _saison!;
 
@@ -32,9 +40,9 @@ class VideosProviders with ChangeNotifier{
   }
 
 
-  bool get isfavori => _isfavori;
+  String get isfavori => _isfavori;
 
-  set Changeisfavori(bool value) {
+  set Changeisfavori(String value) {
     _isfavori = value;
     notifyListeners();
   }
@@ -148,14 +156,21 @@ class VideosProviders with ChangeNotifier{
     return json.decode(res.body)[i];
   }
   ifSimilaire(id) async{
-    final res = await videosService.getInfosMovies(int.tryParse(id));
+    final res = await videosService.getInfosMovies(int.parse(id));
     List<dynamic> test = json.decode(res.body)[4];
-    if(test.length >= 1){
+    print("similairelist" + "$test");
+    if(json.decode(res.body)[4].length >= 1){
       _similaire = true;
       notifyListeners();
     }else _similaire = false;
     notifyListeners();
   }
+
+Future<List<dynamic>> getAllFavoris() async{
+    final res = await videosService.allFavorie();
+    //var body = json.decode(res.body);
+    return json.decode(res.body);
+}
 
   Future<List<dynamic>> allSaisons(id) async{
     final res = await videosService.getInfosMovies(int.tryParse(_videoCreatorId!));
@@ -165,16 +180,40 @@ class VideosProviders with ChangeNotifier{
   addToFavorie(id) async{
     final res = await videosService.postFavorie(id);
     var body = json.decode(res.body);
+    print(body["message"]);
     if(body["message"] == "success"){
-      _isfavori = true;
+      _ifAddorRetrive = "success";
+      notifyListeners();
     }else{
-      _isfavori = false;
+      _ifAddorRetrive = "null";
+      notifyListeners();
     }
   }
 
+  deleteToFavorie(id) async{
+    final res = await videosService.moveFavorie(id);
+    var body = json.decode(res.body);
+    print(body["message"]);
+    if(body["message"] == "success"){
+      _ifAddorRetrive = "success";
+      notifyListeners();
+    }else{
+      _ifAddorRetrive = "null";
+      notifyListeners();
+    }
+  }
+
+  verifyFavori() async{
+    final res = await videosService.verifyIsFavorie(int.tryParse(_videoCreatorId!));
+    _isfavori = json.decode(res.body);
+    print(_isfavori);
+    notifyListeners();
+  }
+
   Future<List<dynamic>> infosMovies(int i) async{
-    // int id = (_videoCreatorId as int);
     final res = await videosService.getInfosMovies(int.tryParse(_videoCreatorId!));
+    // _isfavori = json.decode(res.body)[5];
+    // notifyListeners();
     return json.decode(res.body)[i];
   }
 

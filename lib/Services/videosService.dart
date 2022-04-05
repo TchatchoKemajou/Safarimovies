@@ -8,6 +8,9 @@ class VideosService{
   String infosMoviesRequest = "/detailpage";
   String episodeRequest = "/episodes";
   String addFavorieRequest = "/addfavoris";
+  String moveFavorieRequest = "/deletefavoris";
+  String favorieRequest = "/favoris";
+  String isFavorieRequest = "/veriffavoris";
 
   getAllMovies() async {
     var fullUrl = safariApi.getUrl() + allMoviesRequest;
@@ -45,5 +48,31 @@ class VideosService{
     );
   }
 
+  moveFavorie(id) async{
+    var fullurl = safariApi.getUrl() + moveFavorieRequest + "/$id";
+    final String token = await safariApi.getToken();
+    return http.delete(
+        Uri.parse(fullurl),
+        headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  allFavorie() async{
+    var fullurl = safariApi.getUrl() + favorieRequest;
+    final String token = await safariApi.getToken();
+    return http.get(
+      Uri.parse(fullurl),
+      headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  verifyIsFavorie(id) async{
+    var fullurl = safariApi.getUrl() + isFavorieRequest + "/$id";
+    final String token = await safariApi.getToken();
+    return http.get(
+        Uri.parse(fullurl),
+        headers: safariApi.setHeadersWithToken(token)
+    );
+  }
 
 }

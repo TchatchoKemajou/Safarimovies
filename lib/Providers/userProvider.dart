@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:safarimovie/Api/safariapi.dart';
-import 'package:safarimovie/Models/Users.dart';
 import 'package:safarimovie/Services/userServeice.dart';
 import 'dart:convert';
 
@@ -12,12 +11,43 @@ class UserProvider with ChangeNotifier{
   String? _token;
   String? _loginMessage;
   String? _emailMessage;
-  String? _id;
-  String? _name;
-  String? _email;
-  String? _password;
-  String? _type;
+  String _id = "";
+  String _name= "";
+  String _email= "";
+  String _avatar= "";
+  String _password= "";
+  String _type= "";
   String? _code;
+  String _oldpass = "";
+
+  String get oldpass => _oldpass;
+
+  set ChangeOldpass(String value) {
+    _oldpass = value;
+    notifyListeners();
+  }
+
+  Map<dynamic, dynamic> _user = {
+    "id": "",
+    "name": "",
+    "email": "",
+    "avatar": "",
+    "type": "",
+  };
+
+  Map<dynamic, dynamic> get user => _user;
+
+  set ChangeUser(Map<dynamic, dynamic> value) {
+    _user = value;
+    notifyListeners();
+  }
+
+  String get avatar => _avatar;
+
+  set ChangeAvatar(String value) {
+    _avatar = value;
+    notifyListeners();
+  }
 
   String get code => _code!;
 
@@ -26,7 +56,7 @@ class UserProvider with ChangeNotifier{
     notifyListeners();
   }
 
-  String get id => _id!;
+  String get id => _id;
 
   set id(String value) {
     _id = value;
@@ -37,13 +67,13 @@ class UserProvider with ChangeNotifier{
   String get loginMessage => _loginMessage!;
   String get token => _token!;
 
-  String get name => _name!;
+  String get name => _name;
 
-  String get type => _type!;
+  String get type => _type;
 
-  String get email => _email!;
+  String get email => _email;
 
-  String get password => _password!;
+  String get password => _password;
 
   set Changetype(String value) {
     _type = value;
@@ -95,6 +125,18 @@ class UserProvider with ChangeNotifier{
       "password": _password
     };
   }
+  Map<String, dynamic> tomapChangeName(name){
+    return {
+      "name": name
+    };
+  }
+  Map<String, dynamic> tomapChangePass(){
+    print(_oldpass + "  et " + _password);
+    return {
+      "oldpassword": _oldpass,
+      "newpassword": _password
+    };
+  }
 
   Map<String, dynamic> tomapsendMail(){
     return {
@@ -103,36 +145,52 @@ class UserProvider with ChangeNotifier{
     };
   }
 
+  updatePassword(id) async{
+    var res = await userService.changePassword(tomapChangePass(), id);
+    var body = json.decode(res.body);
+    _loginMessage = body['message'];
+    notifyListeners();
+  }
+
+  updateName(id, name) async{
+    var res = await userService.changeName(tomapChangeName(name), id);
+    var body = json.decode(res.body);
+
+    _loginMessage = body['message'];
+    print(_loginMessage);
+    print(body['name']);
+    notifyListeners();
+  }
+
   loadUser(dynamic user){
     _id = user["id"].toString();
-    _name = user["name"];
-    _email = user["email"];
+    _name = user["name"] == null ? "" : user["name"];
+    _email = user["email"] == null ? "" : user["email"];
+    _avatar = user["avatar"] == null ? "" : user["avatar"];
     _type = user["type"].toString();
     notifyListeners();
+  }
+
+  Future<dynamic>getinfosuser() async{
+    var res = await userService.getUser();
+    var body = json.decode(res.body);
+    print(body[0]);
+    return body[0];
+    //_user = body[0];
+    //loadUser(body[0]);
+    //notifyListeners();
   }
 
   loginToAccount() async{
     var res = await userService.loginUser(tomaplogin());
     var body = json.decode(res.body);
-    // if(body == "Password mismatch"){
-    //   _loginMessage = "Email ou Mot de passe incorrect";
-    // }
-    // if(body == "User does not exist"){
-    //   _loginMessage = "Identifiant non valide";
-    // }
-    // else{
-    //   _loginMessage = "success";
-    // }
     if(body["message"] == "success"){
       _loginMessage = "success";
       var tk = body["access_token"]["token"];
-      print(tk);
       _token = tk.toString();
       notifyListeners();
-      print(body["user"]["name"]);
-      print(body["user"]["email"]);
     }else{
-      _loginMessage = "Email ou Mot de passe incorrect";
+      _loginMessage = "error";
       notifyListeners();
     }
     //_loginMessage = body["message"];
@@ -199,7 +257,7 @@ class UserProvider with ChangeNotifier{
   logAccountUser() async{
     var res = await userService.logout();
     var body = json.decode(res.body);
-    if(body == "You have been successfully logged out!"){
+    if(body == "success"){
       SafariApi().deleteToken();
       _loginMessage = "success";
     }

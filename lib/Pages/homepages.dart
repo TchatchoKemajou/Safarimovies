@@ -1,8 +1,11 @@
 import 'package:bottom_bar/bottom_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:safarimovie/Pages/homepage.dart';
 import 'package:safarimovie/Pages/profilpage.dart';
 import 'package:safarimovie/Pages/searchpage.dart';
+import 'package:safarimovie/Providers/userProvider.dart';
+import 'package:safarimovie/Services/userServeice.dart';
 import 'package:safarimovie/constantes.dart';
 
 import 'favoritepage.dart';
@@ -15,14 +18,25 @@ class HomePages extends StatefulWidget {
 }
 
 class _HomePagesState extends State<HomePages> {
-  List<Widget> pages = [MyHomePage(), FavoritePage(), SearchPage(), ProfilePage()];
+  UserService userservice = UserService();
+  List<Widget> pages = [];
   int _currentPage = 0;
+  late Map<dynamic, dynamic> user;
 
   @override
   void initState() {
     // TODO: implement initState
+     //final userprovider = Provider.of<UserProvider>(context, listen: false);
+    // user = userprovider.getinfosuser();
+     pages = [MyHomePage(), FavoritePage(), SearchPage(), ProfilePage()];
+     // userprovider.getinfosuser().then((value){
+     //   user = value;
+     //   pages = [MyHomePage(), FavoritePage(), SearchPage(), ProfilePage(user: user,)];
+     // });
+
     super.initState();
   }
+
 
   @override
   Widget build(BuildContext context) {

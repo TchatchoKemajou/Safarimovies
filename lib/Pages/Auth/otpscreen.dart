@@ -3,6 +3,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:provider/provider.dart';
 import 'package:safarimovie/Api/safariapi.dart';
 import 'package:safarimovie/Pages/Auth/changepassword.dart';
+import 'package:safarimovie/Pages/Auth/enternewpassword.dart';
 import 'package:safarimovie/Pages/homepages.dart';
 import 'package:safarimovie/Providers/userProvider.dart';
 
@@ -22,6 +23,7 @@ class _OtpScreenState extends State<OtpScreen> {
   SafariApi safariapi = SafariApi();
   String otpvalue = "";
   bool iscorrect = false, isValide = false;
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     final userprovider = Provider.of<UserProvider>(context,);
@@ -152,26 +154,35 @@ class _OtpScreenState extends State<OtpScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ElevatedButton(
+                isLoading == true ? smallButton() :ElevatedButton(
                   onPressed: () async{
                     if(otpvalue == widget.otp){
                       if(widget.action == "register"){
+                        setState(() {
+                          isLoading = true;
+                        });
                         await userprovider.createAccount();
                         if(userprovider.registerMessage == "success"){
-                          userprovider.loginToAccount();
+                          userprovider.Changeemail = widget.user['email'];
+                          userprovider.Changepassword = widget.user['password'];
+                          await userprovider.loginToAccount();
                           print(userprovider.loginMessage);
                           if(userprovider.loginMessage == "success"){
-                            // setState(() {
-                            //   isValide = false;
-                            // });
-                            safariapi.setToken(userprovider.token);
+                            setState(() {
+                              isLoading = false;
+                            });
+                            await safariapi.setToken(userprovider.token);
                             Navigator.of(context).pop();
                             Navigator.of(context).pop();
                             Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
+                          }else{
+                            setState(() {
+                              isLoading = false;
+                            });
                           }
-                        }else{
-
                         }
+                      }else{
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => EnterNewPassword(id: widget.user['id'],)));
                       }
                     }
                   },

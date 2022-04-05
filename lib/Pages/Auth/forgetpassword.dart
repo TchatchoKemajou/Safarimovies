@@ -149,7 +149,6 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "changepassword",)));
                   }
                 }
-               // Navigator.push(context, MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "changepassword",)));
               },
 
               child: Text(

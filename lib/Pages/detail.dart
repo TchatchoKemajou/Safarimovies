@@ -20,7 +20,8 @@ class _DetailPageState extends State<DetailPage> {
   var incre;
   String saison = "Saison 1";
   int saisonId = 1;
-  bool iffavori = false;
+  //bool iffavori = false;
+  late int currentIndex;
   List<String> saisons = [];
    late bool ifsimilaire;
   List imgList = [
@@ -36,6 +37,9 @@ class _DetailPageState extends State<DetailPage> {
   @override
   void initState() {
     // TODO: implement initState
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    videoprovider.loadFilm(widget.film);
+    //videoprovider.ifSimilaire(widget.film["creator_id"]);
     ifsimilaire = widget.issimilaire;
     //saisons = ["Saison 1", "Saison 2", "Saison 3", "Saison 4", "Saison 5", "Saison 6"];
     super.initState();
@@ -43,9 +47,11 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
-     videoprovider.loadFilm(widget.film);
-    //videoprovider.ifSimilaire();
+     final videoprovider = Provider.of<VideosProviders>(context);
+     // videoprovider.loadFilm(widget.film);
+     // videoprovider.verifyFavori();
+    // videoprovider.ifSimilaire(widget.film["creator_id"]);
+    // print("similaire =" + videoprovider.similaire.toString());
     //videoprovider.allSaisons();
     //print(videoprovider.saison);
     // setState(() {
@@ -70,7 +76,7 @@ class _DetailPageState extends State<DetailPage> {
               ),
               listViewActeur(),
               widget.film['rubrique'] != "Film" ? listViewEpisode() : SizedBox(),
-              ifsimilaire == true ? listViewSimilaire() : SizedBox(),
+              videoprovider.similaire == true ? listViewSimilaire() : SizedBox(),
             ],
           ),
         ),
@@ -78,7 +84,14 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
   appBar() {
-    final videoprovider = Provider.of<VideosProviders>(context);
+    //final videoprovider = Provider.of<VideosProviders>(context);
+    final videoprovider2 = Provider.of<VideosProviders>(context);
+    setState(() {
+      videoprovider2.verifyFavori();
+    });
+    // setState(() {
+    //   iffavori = videoprovider.isfavori;
+    // });
     return AppBar(
       automaticallyImplyLeading: true,
       title: Text(
@@ -90,18 +103,32 @@ class _DetailPageState extends State<DetailPage> {
         ),
       ),
       actions: [
-        IconButton(
-          icon: Icon(
-            iffavori == true ? Icons.favorite :Icons.favorite_outline_rounded,
-            color: iffavori == true ? Colors.red :Colors.white,
+        InkWell(
+          child: Icon(
+            videoprovider2.isfavori == "vrai" ? Icons.favorite :Icons.favorite_outline_rounded,
+            color: videoprovider2.isfavori == "vrai" ? Colors.red :Colors.white,
           ),
-          onPressed: () async{
-            videoprovider.addToFavorie(widget.film["creator_id"]);
-            setState(() {
-              iffavori = videoprovider.isfavori;
-            });
+          onTap: () async{
+            if(videoprovider2.isfavori == "faux"){
+              //videoprovider2.Changeisfavori = "vrai";
+              await videoprovider2.addToFavorie(widget.film["creator_id"]);
+              if(videoprovider2.ifAddorRetrive == "success"){
+                setState(() {
+                  videoprovider2.Changeisfavori = "vrai";
+                });
+              }
+            }else{
+              videoprovider2.Changeisfavori = "faux";
+              await videoprovider2.deleteToFavorie(widget.film["creator_id"]);
+              if(videoprovider2.ifAddorRetrive == "success"){
+                setState(() {
+                  videoprovider2.Changeisfavori = "faux";
+                });
+                // videoprovider.loadFilm(widget.film);
+              }
+            }
           },
-        ),
+        )
       ],
       centerTitle: true,
       backgroundColor: fisrtcolor,
@@ -110,7 +137,8 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   affiche() {
-    final videoprovider = Provider.of<VideosProviders>(context);
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+   // final videoprovider2 = Provider.of<VideosProviders>(context, listen: false);
     return Column(
       children: [
         Stack(
@@ -417,7 +445,7 @@ class _DetailPageState extends State<DetailPage> {
               ],
             ),
             Text(
-              'HD',
+                item["qualite"].toString().toUpperCase(),
               style: TextStyle(
                   color: Colors.white,
                 fontFamily: 'PopRegular'
@@ -479,7 +507,7 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   listViewActeur() {
-    final videoprovider = Provider.of<VideosProviders>(context);
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     return Column(
       children: [
         Container(
@@ -517,7 +545,7 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   listViewEpisode(){
-    final videoprovider = Provider.of<VideosProviders>(context);
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     return Container(
       // height: 500,
       padding: EdgeInsets.only(bottom: 20),
@@ -626,24 +654,32 @@ class _DetailPageState extends State<DetailPage> {
                     height: 400.0,
                     initialPage: 0,
                     enlargeCenterPage: true,
+                    onPageChanged: (index, reason) {
+                      setState(() {
+                        currentIndex = index;
+                      });
+                    },
                   ),
-                  // onPageChanged: (index) {
-                  //   setState(() {
-                  //     index = 0;
-                  //   });
-                  // },
                   items: snapshot.data?.map((imgUrl) {
                     return Builder(
                       builder: (BuildContext context) {
-                        return Container(
-                          width: MediaQuery.of(context).size.width,
-                          margin: EdgeInsets.symmetric(horizontal: 10.0),
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                          ),
-                          child: Image.network(
-                            safariapi.getImage() + imgUrl['image'].toString(),
-                            fit: BoxFit.fill,
+                        return InkWell(
+                          onTap: () async{
+                            dynamic item = videoprovider.returnFilm(snapshot.data![currentIndex]);
+
+                            videoprovider.ifSimilaire(snapshot.data![currentIndex]['id']);
+                            Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videoprovider.similaire,)));
+                          },
+                          child: Container(
+                            width: MediaQuery.of(context).size.width,
+                            margin: EdgeInsets.symmetric(horizontal: 10.0),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                            ),
+                            child: Image.network(
+                              safariapi.getImage() + imgUrl['image'].toString(),
+                              fit: BoxFit.fill,
+                            ),
                           ),
                         );
                       },

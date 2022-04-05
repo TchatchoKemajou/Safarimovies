@@ -2,36 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:motion_toast/resources/arrays.dart';
 import 'package:provider/provider.dart';
-import 'package:safarimovie/Pages/Auth/login.dart';
 import 'package:safarimovie/Providers/userProvider.dart';
 
 import '../../constantes.dart';
 
-class ChangePassWord extends StatefulWidget {
+class EnterNewPassword extends StatefulWidget {
   final String id;
-  const ChangePassWord({
+  const EnterNewPassword({
     Key? key,
     required this.id
   }) : super(key: key);
 
   @override
-  _ChangePassWordState createState() => _ChangePassWordState();
+  _EnterNewPasswordState createState() => _EnterNewPasswordState();
 }
 
-
-
-class _ChangePassWordState extends State<ChangePassWord> {
+class _EnterNewPasswordState extends State<EnterNewPassword> {
   final _formKey = GlobalKey<FormState>();
   final passwordController = TextEditingController();
   final confirmpasswordController = TextEditingController();
   bool isLoading = false;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +32,7 @@ class _ChangePassWordState extends State<ChangePassWord> {
           automaticallyImplyLeading: true,
           centerTitle: true,
           title: Text(
-            "Changer le mot de passe",
+            "Mot de passe oublié",
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: 'PopBold',
@@ -106,52 +96,52 @@ class _ChangePassWordState extends State<ChangePassWord> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
-            keyboardType: TextInputType.text,
-            //controller: passwordController,
-            onChanged: (e){
-              userprovider.ChangeOldpass = e;
-            },
-            validator: (e) => e!.isEmpty ? "Mot de passe non valide":null,
-            maxLines: 1,
-            obscureText: true,
-            style: TextStyle(
-                color: Colors.white
-            ),
-            decoration: InputDecoration(
-              hoverColor: Colors.white,
-              // hintText: 'login',
-              // hintStyle: TextStyle(
-              //   color: Colors.white54,
-              // ),
-              labelText: 'Ancien mot de passe',
-              focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                  borderSide: BorderSide(
-                      color: Colors.white
-                  )
-              ),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                  borderSide: BorderSide(
-                      color: Colors.white
-                  )
-              ),
-              labelStyle: TextStyle(
-                color: Colors.white,
-              ),
-              isDense: true,                      // Added this
-              contentPadding: EdgeInsets.all(10),
-              //hintText: "login",
-              suffixIcon: Icon(Icons.lock, color: kSecondaryColor,),
-              //suffixStyle: ,
-              floatingLabelBehavior: FloatingLabelBehavior.auto,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5))
-              ),
-            ),
-          ),
-          SizedBox(height: 20,),
+          // TextFormField(
+          //   keyboardType: TextInputType.text,
+          //   //controller: passwordController,
+          //   onChanged: (e){
+          //     userprovider.ChangeOldpass = e;
+          //   },
+          //   validator: (e) => e!.isEmpty ? "Mot de passe non valide":null,
+          //   maxLines: 1,
+          //   obscureText: true,
+          //   style: TextStyle(
+          //       color: Colors.white
+          //   ),
+          //   decoration: InputDecoration(
+          //     hoverColor: Colors.white,
+          //     // hintText: 'login',
+          //     // hintStyle: TextStyle(
+          //     //   color: Colors.white54,
+          //     // ),
+          //     labelText: 'Ancien mot de passe',
+          //     focusedBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.all(Radius.circular(5)),
+          //         borderSide: BorderSide(
+          //             color: Colors.white
+          //         )
+          //     ),
+          //     enabledBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.all(Radius.circular(5)),
+          //         borderSide: BorderSide(
+          //             color: Colors.white
+          //         )
+          //     ),
+          //     labelStyle: TextStyle(
+          //       color: Colors.white,
+          //     ),
+          //     isDense: true,                      // Added this
+          //     contentPadding: EdgeInsets.all(10),
+          //     //hintText: "login",
+          //     suffixIcon: Icon(Icons.lock, color: kSecondaryColor,),
+          //     //suffixStyle: ,
+          //     floatingLabelBehavior: FloatingLabelBehavior.auto,
+          //     border: OutlineInputBorder(
+          //         borderRadius: BorderRadius.all(Radius.circular(5))
+          //     ),
+          //   ),
+          // ),
+          // SizedBox(height: 20,),
           TextFormField(
             keyboardType: TextInputType.text,
             controller: passwordController,
@@ -256,6 +246,8 @@ class _ChangePassWordState extends State<ChangePassWord> {
                       isLoading = false;
                     });
                     Navigator.pop(context);
+                    Navigator.pop(context);
+                    Navigator.pop(context);
                   }else{
                     setState(() {
                       isLoading = false;
@@ -324,8 +316,8 @@ class _ChangePassWordState extends State<ChangePassWord> {
     return Container(
       padding: EdgeInsets.all(5.0),
       decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: secondcolor,
+        shape: BoxShape.circle,
+        color: secondcolor,
       ),
       child: Center(
         child: CircularProgressIndicator(color: Colors.white,),
