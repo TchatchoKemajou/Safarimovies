@@ -155,7 +155,7 @@ class UserProvider with ChangeNotifier{
   updateName(id, name) async{
     var res = await userService.changeName(tomapChangeName(name), id);
     var body = json.decode(res.body);
-
+    print(body);
     _loginMessage = body['message'];
     print(_loginMessage);
     print(body['name']);

@@ -28,10 +28,9 @@ class _PlayVideoPageState extends State<PlayVideoPage> {
   @override
   void initState() {
     // TODO: implement initState
-    print(widget.video['video']);
     BetterPlayerDataSource betterPlayerDataSource = BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
-        safariapi.getFilm() + widget.video['video'].toString());
+        safariapi.getFilm().toString() + widget.video['video'].toString());
     _betterPlayerController = BetterPlayerController(
         const BetterPlayerConfiguration(
           aspectRatio: 16/9,
@@ -44,6 +43,7 @@ class _PlayVideoPageState extends State<PlayVideoPage> {
 
   @override
   Widget build(BuildContext context) {
+    print("voici le lien de la video" + safariapi.getFilm() + widget.video['video'].toString());
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(

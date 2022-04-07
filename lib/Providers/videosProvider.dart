@@ -40,6 +40,13 @@ class VideosProviders with ChangeNotifier{
   }
 
 
+  dynamic get movies => _movies;
+
+  set Changemovies(dynamic value) {
+    _movies = value;
+    notifyListeners();
+  }
+
   String get isfavori => _isfavori;
 
   set Changeisfavori(String value) {
@@ -58,13 +65,6 @@ class VideosProviders with ChangeNotifier{
 
   set videoLangue(String value) {
     _videoLangue = value;
-    notifyListeners();
-  }
-
-  dynamic get movies => _movies;
-
-  set movies(dynamic value) {
-    _movies = value;
     notifyListeners();
   }
 
@@ -165,6 +165,14 @@ class VideosProviders with ChangeNotifier{
     }else _similaire = false;
     notifyListeners();
   }
+
+  Future<List<dynamic>> selectAllVideo() async{
+    final res = await videosService.findAll();
+    var body = json.decode(res.body);
+    //print(body);
+    return body;
+  }
+
 
 Future<List<dynamic>> getAllFavoris() async{
     final res = await videosService.allFavorie();

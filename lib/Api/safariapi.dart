@@ -4,15 +4,16 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 class SafariApi{
 
-  //final String _url = 'http://192.168.100.4:8000/api';
-  final String _url = 'https://safarimovies.herokuapp.com/api';
-  final String _imgUrl='https://safarimovies.herokuapp.com/images/';
-  final String _imgUrlPub='https://safarimovies.herokuapp.com/publicites/';
-  final String _photoUrl='https://safarimovies.herokuapp.com/acteurs/';
-  final String _profilUrl='https://safarimovies.herokuapp.com/profils/';
-  final String _logoUrl='https://safarimovies.herokuapp.com/logos/';
-  final String _filmUrl='https://safarimovies.herokuapp.com/films/';
-  final String _episodeUrl='https://safarimovies.herokuapp.com/episodes/';
+  static const String baseurl = 'http://192.168.100.4:8000';
+  //static const String baseurl = "https://fbf2-154-72-169-186.ngrok.io";
+  final String _url = baseurl + '/api';
+  final String _imgUrl= baseurl + '/images/';
+  final String _imgUrlPub= baseurl + '/publicites/';
+  final String _photoUrl= baseurl + '/acteurs/';
+  final String _profilUrl= baseurl + '/profils/';
+  final String _logoUrl= baseurl + '/logos/';
+  final String _filmUrl= baseurl + '/films/';
+  final String _episodeUrl= baseurl + '/episodes/';
   // final String _imgUrl='http://192.168.100.4:8000/images/';
   // final String _imgUrlPub='http://192.168.100.4:8000/publicites/';
   // final String _photoUrl='http://192.168.100.4:8000/acteurs/';

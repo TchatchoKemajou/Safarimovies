@@ -11,6 +11,7 @@ class VideosService{
   String moveFavorieRequest = "/deletefavoris";
   String favorieRequest = "/favoris";
   String isFavorieRequest = "/veriffavoris";
+  String findAllRequest = "/search";
 
   getAllMovies() async {
     var fullUrl = safariApi.getUrl() + allMoviesRequest;
@@ -44,6 +45,15 @@ class VideosService{
     final String token = await safariApi.getToken();
     return http.post(
       Uri.parse(fullurl),
+      headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  findAll() async{
+    var fullUrl = safariApi.getUrl() + findAllRequest;
+    final String token = await safariApi.getToken();
+    return http.get(
+      Uri.parse(fullUrl),
       headers: safariApi.setHeadersWithToken(token)
     );
   }

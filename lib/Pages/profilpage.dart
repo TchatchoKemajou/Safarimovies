@@ -425,13 +425,10 @@ class _ProfilePageState extends State<ProfilePage> {
   appBar() {
     return AppBar(
       elevation: .0,
-      title: Text(
-        'Mon profil',
-        style: TextStyle(
-          fontSize: 20,
-          color: Colors.white,
-          fontFamily: 'PopBold',
-        ),
+      title: Image.asset(
+        "assets/images/logo.png",
+        height: MediaQuery.of(context).size.height * 0.4,
+        width: MediaQuery.of(context).size.width * 0.5,
       ),
       //centerTitle: true,
       backgroundColor: fisrtcolor,
