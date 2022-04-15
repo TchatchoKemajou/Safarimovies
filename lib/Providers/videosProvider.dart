@@ -152,7 +152,8 @@ class VideosProviders with ChangeNotifier{
   }
 
    Future<List<dynamic>> allMovies(int i) async{
-    final res = await videosService.getAllMovies();
+    final res = await videosService.getAllMovies("cameroun", "en");
+    print(json.decode(res.body)[7]);
     return json.decode(res.body)[i];
   }
   ifSimilaire(id) async{
@@ -164,6 +165,12 @@ class VideosProviders with ChangeNotifier{
       notifyListeners();
     }else _similaire = false;
     notifyListeners();
+  }
+
+  readNotification() async{
+    var res = await videosService.readNotification();
+    var body = json.decode(res.body);
+    print(body);
   }
 
   Future<List<dynamic>> selectAllVideo() async{
@@ -222,6 +229,7 @@ Future<List<dynamic>> getAllFavoris() async{
     final res = await videosService.getInfosMovies(int.tryParse(_videoCreatorId!));
     // _isfavori = json.decode(res.body)[5];
     // notifyListeners();
+    print(json.decode(res.body)[4]);
     return json.decode(res.body)[i];
   }
 

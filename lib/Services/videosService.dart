@@ -12,15 +12,26 @@ class VideosService{
   String favorieRequest = "/favoris";
   String isFavorieRequest = "/veriffavoris";
   String findAllRequest = "/search";
+  String readNotifRequest = "/readnotification";
 
-  getAllMovies() async {
-    var fullUrl = safariApi.getUrl() + allMoviesRequest;
+  getAllMovies(pays, lang) async {
+    var fullUrl = safariApi.getUrl() + allMoviesRequest + "/$pays/";
     final String token = await safariApi.getToken();
     return http.get(
       Uri.parse(fullUrl),
       headers: safariApi.setHeadersWithToken(token)
     );
   }
+
+readNotification() async{
+    var fullUrl = safariApi.getUrl() + readNotifRequest;
+    final String token = await safariApi.getToken();
+
+    return http.get(
+      Uri.parse(fullUrl),
+      headers: safariApi.setHeadersWithToken(token)
+    );
+}
 
   getInfosMovies(id) async{
     var fullUrl = safariApi.getUrl() + infosMoviesRequest + "/$id";

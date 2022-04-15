@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 class SafariApi{
 
+  //static const String baseurl = 'http://172.20.10.4:8000';
   static const String baseurl = 'http://192.168.100.4:8000';
   //static const String baseurl = "https://fbf2-154-72-169-186.ngrok.io";
   final String _url = baseurl + '/api';

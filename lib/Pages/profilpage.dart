@@ -115,10 +115,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     setState(() {
                                       userprovider.loadUser(user);
                                     });
-                                  Timer(Duration(seconds: 1), () {
-                                    setState(() {
-                                    });
-                                  });
+                                    image = null;
+                                  // Timer(Duration(seconds: 1), () {
+                                  //   setState(() {
+                                  //   });
+                                  // });
                                 });
                               });
                             }catch(e){

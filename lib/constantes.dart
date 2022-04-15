@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 const fisrtcolor = Color(0xFF181A20);
 const secondcolor = Color(0xFFFF002D);
+const thirdcolor = Color(0xFF292929);
 const animduration = Duration(seconds: 1);
 //const animduration = Duration(milliseconds: 500);
 const kSecondaryColor = Color(0xFF979797);

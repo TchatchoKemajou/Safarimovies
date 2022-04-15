@@ -1,13 +1,16 @@
 import 'package:carousel_nullsafety/carousel_nullsafety.dart';
 import 'package:flutter/material.dart';
+import 'package:icon_badge/icon_badge.dart';
 import 'package:provider/provider.dart';
+import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:safarimovie/Api/safariapi.dart';
 import 'package:safarimovie/Pages/detail.dart';
+import 'package:safarimovie/Pages/notificationpage.dart';
 import 'package:safarimovie/Providers/videosProvider.dart';
 import 'package:safarimovie/Services/videosService.dart';
 import 'package:safarimovie/constantes.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
-import 'dart:convert';
+import 'dart:async';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -23,14 +26,25 @@ class _MyHomePageState extends State<MyHomePage> {
   //List data = [];
   late Map datas;
   List<dynamic> userData = [];
+  //Future<List<dynamic>> notificationList =  [] as Future<List<dynamic>>;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
   }
 
+  loadFutureList() async{
+    final videosProviders = Provider.of<VideosProviders>(context);
+    Timer.periodic(Duration(seconds: 30), (timer) {
+      setState(() {
+       videosProviders.allMovies(5);
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    //loadFutureList();
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: CustomScrollView(
@@ -64,19 +78,19 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   appBar() {
+    int nonlu = 0;
+    final videosProviders = Provider.of<VideosProviders>(context);
+    Timer.periodic(Duration(seconds: 30), (timer) {
+      setState(() {
+        nonlu = 0;
+        videosProviders.allMovies(5);
+      });
+    });
     return Padding(
       padding: const EdgeInsets.only(left: 10, right: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Text(
-          //   'Safari Movies',
-          //   style: TextStyle(
-          //       fontFamily: 'RoboItalic',
-          //       fontSize: 30,
-          //       color: Colors.white,
-          //       fontWeight: FontWeight.w800),
-          // ),
           Image.asset(
             "assets/images/logo.png",
             height: MediaQuery.of(context).size.height * 0.4,
@@ -84,22 +98,57 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Row(
             children: [
-              IconButton(
-                icon: Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                ),
-                onPressed: null,
-              ),
-              Container(
-                height: 30,
-                width: 30,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100.0),
-                    image: DecorationImage(
-                        image: AssetImage("assets/images/person3.jpg"),
-                        fit: BoxFit.cover)),
-              ),
+             FutureBuilder<List<dynamic>>(
+               future: videosProviders.allMovies(5),
+                 builder: (context, snapshot) {
+                   if(snapshot.data != null){
+                     for(int i=0; i < (snapshot.data?.length as int); i++){
+                       if(snapshot.data![i][0]['read_at'].toString() == "null"){
+                           nonlu = i + 1;
+                       }
+                     }
+                     print(nonlu);
+                     return  IconBadge(
+                       icon: Icon(Icons.notifications_none),
+                       itemCount: nonlu,
+                       badgeColor: secondcolor,
+                       maxCount: 99,
+                       top: 6,
+                       right: 5,
+                       itemColor: Colors.white,
+                       hideZero: true,
+                       onTap: () async{
+                         await videosProviders.readNotification();
+                         nonlu = 0;
+                         Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage(notifications: snapshot.data!,)));
+                       },
+                     );
+                   }else{
+                     return Padding(
+                       padding: const EdgeInsets.only(right: 24),
+                       child: Icon(Icons.notifications_none),
+                     );
+                   }
+                 }),
+             FutureBuilder<List<dynamic>>(
+                future: videosProviders.allMovies(7),
+                  builder: (context, snapshot) {
+                    if(snapshot.data != null){
+                      print(snapshot.data![0]['avatar']);
+                      return CircleAvatar(
+                        radius: 15,
+                        backgroundColor: Colors.white,
+                        backgroundImage: snapshot.data![0]['avatar'] != null ? NetworkImage(safariapi.getProfil() + snapshot.data![0]['avatar'].toString()) : NetworkImage(safariapi.getLogo() + "logomobilenoir.png")
+                      );
+                    }else{
+                      return CircleAvatar(
+                        radius: 15,
+                        backgroundColor: Colors.white,
+                        child: Center(child: Icon(Icons.person, size: 20,),),
+                        //backgroundImage: Icon(Icons.person),
+                      );
+                    }
+                  })
             ],
           )
         ],
@@ -109,14 +158,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   pub() {
     final videoprovider = Provider.of<VideosProviders>(context);
+    Map<dynamic, dynamic> pubencour;
     return Stack(
       children: [
         FutureBuilder<List<dynamic>>(
-          future: videoprovider.allMovies(4),
+          future: videoprovider.allMovies(0),
             builder: (context, snapshot){
               if(snapshot.data != null){
                 incre = snapshot.data?.length;
                 int ic = (incre as int) - 1;
+                  //pubencour = snapshot.data![i][0];
                 return Container(
                   width: double.infinity,
                   child: Carousel(
@@ -129,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     borderRadius: true,
                     images: [
                       for(int i = 0; i <= ic; i++)
-                        slide(snapshot.data![i])
+                        slide(snapshot.data![i][0], snapshot.data![i][1])
                     ],
                   ),
                 );
@@ -152,7 +203,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   Icons.play_arrow,
                   color: Colors.white,
                 ),
-                onPressed: () {},
+                onPressed: () {
+
+                },
                 // color: thirdcolor,
               ),
             ),
@@ -162,7 +215,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  slide(item) {
+  slide(item, genres) {
+    incre = genres.length;
+    int ic = (incre as int);
     return Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -172,68 +227,80 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Colors.black.withOpacity(0.5),
             child: Stack(
               children: [
-                Padding(
-                  padding: EdgeInsets.only(bottom: 185, left: 20, right: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Disponible maintenant",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15.0,
-                          fontFamily: 'PopRegular',
-                        ),
-                      ),
-                      Text(
-                        item['titre'].toString(),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20.0,
-                          fontFamily: 'PopBold',
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 5,
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Film",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'PopBold',
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_right,
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: 185, left: 20, right: 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Disponible maintenant",
+                          style: TextStyle(
                             color: Colors.white,
+                            fontSize: 15.0,
+                            fontFamily: 'PopRegular',
                           ),
-                          Text(
-                            "Comedie",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'PopBold',
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_right,
+                        ),
+                        Text(
+                          item['titre'].toString(),
+                          style: TextStyle(
                             color: Colors.white,
+                            fontSize: 20.0,
+                            fontFamily: 'PopBold',
                           ),
-                          Text(
-                            "Drame",
-                            style: TextStyle(
+                          textAlign: TextAlign.center,
+                          maxLines: 5,
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          runAlignment: WrapAlignment.center,
+                         // crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 5.0,
+                          runSpacing: 5.0,
+                          children: [
+                            // for(int i = 0; i <= ic; i++)
+                            ic >= 1 ? Text(
+                              genres[0]["nom"].toString(),
+                              style: TextStyle(
+                                 color: Colors.white,
+                                fontFamily: 'PopBold',
+                                fontSize: 15,
+                              ),
+                            ) :SizedBox(),
+                            ic > 1 ? Icon(
+                              Icons.arrow_right,
                               color: Colors.white,
-                              fontFamily: 'PopBold',
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
+                              size: 20,
+                            ) : SizedBox(),
+                            ic >= 2 ? Text(
+                              genres[1]["nom"].toString(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'PopBold',
+                                fontSize: 15,
+                              ),
+                            ) :SizedBox(),
+                            ic > 2 ? Icon(
+                              Icons.arrow_right,
+                              color: Colors.white,
+                              size: 20,
+                            ) :SizedBox(),
+                            ic >= 3 ? Text(
+                              genres[2]["nom"].toString(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'PopBold',
+                                fontSize: 15,
+                              ),
+                            ) :SizedBox(),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
                 Positioned(
@@ -532,7 +599,7 @@ class _MyHomePageState extends State<MyHomePage> {
       height: 250,
       width: double.infinity,
       child: FutureBuilder<List<dynamic>>(
-        future: videosProviders.allMovies(0),
+        future: videosProviders.allMovies(1),
         builder: (context, snapshot){
           if(snapshot.data != null){
             return ListView.builder(
@@ -540,14 +607,16 @@ class _MyHomePageState extends State<MyHomePage> {
               itemCount: snapshot.data?.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
+                incre = snapshot.data?[index][1].length;
+                int ic = (incre as int);
                 return InkWell(
                   onTap: (){
                     // dynamic film = videosProviders.returnFilm(snapshot.data![index]);
                     // List<String> ss = videosProviders.saison;
                     //videosProviders.infosMovies(4);
-                    dynamic item = videosProviders.returnFilm(snapshot.data![index]);
+                    dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
 
-                    videosProviders.ifSimilaire(snapshot.data![index]['id']);
+                    videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
                   },
                   child: Container(
@@ -561,9 +630,26 @@ class _MyHomePageState extends State<MyHomePage> {
                         Container(
                           height: 200,
                           width: 150,
+                          foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
+                          ? const RotatedCornerDecoration(
+                          color: secondcolor,
+                          geometry: const BadgeGeometry(width: 48, height: 48),
+                          textSpan: const TextSpan(
+                            text: 'Nouveau',
+                            style: TextStyle(
+                              fontSize: 10,
+                              // letterSpacing: 1,
+                              // fontWeight: FontWeight.bold,
+                              fontFamily: 'PopBold',
+                              color: Colors.white,
+                              shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
+                            ),
+                          ),
+                        )
+                          : BoxDecoration(),
                           decoration: BoxDecoration(
                               image: DecorationImage(
-                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index]['image'].toString()),
+                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
                                   fit: BoxFit.cover),
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(5.0)),
@@ -575,7 +661,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              snapshot.data![index]['titre'].toString(),
+                              snapshot.data![index][0]['titre'].toString(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               softWrap: true,
@@ -588,41 +674,82 @@ class _MyHomePageState extends State<MyHomePage> {
                             SizedBox(
                               height: 5,
                             ),
-                            Row(
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              runAlignment: WrapAlignment.center,
+                              // crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 5.0,
+                              runSpacing: 5.0,
                               children: [
-                                Text(
-                                  'Serie',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ),
-                                Icon(
+                                // for(int i = 0; i <= ic; i++)
+                                ic >= 1 ? Text(
+                                  snapshot.data![index][1][0]["nom"].toString(),
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 8,
+                                        ),
+                                ) :SizedBox(),
+                                ic > 1 ? Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                   size: 10,
-                                ),
-                                Text(
-                                  'Documentaire',
+                                ) : SizedBox(),
+                                ic >= 2 ? Text(
+                                  snapshot.data![index][1][1]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
-                                Icon(
+                                ) :SizedBox(),
+                                ic > 2 ? Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                   size: 10,
-                                ),
-                                Text(
-                                  'Histoire',
+                                ) :SizedBox(),
+                                ic >= 3 ? Text(
+                                  snapshot.data![index][1][2]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
+                                ) :SizedBox(),
                               ],
                             )
+                            // Row(
+                            //   children: [
+                            //     Text(
+                            //       'Serie',
+                            //       style: TextStyle(
+                            //         color: Colors.grey,
+                            //         fontSize: 8,
+                            //       ),
+                            //     ),
+                            //     Icon(
+                            //       Icons.arrow_right,
+                            //       color: Colors.white,
+                            //       size: 10,
+                            //     ),
+                            //     Text(
+                            //       'Documentaire',
+                            //       style: TextStyle(
+                            //         color: Colors.grey,
+                            //         fontSize: 8,
+                            //       ),
+                            //     ),
+                            //     Icon(
+                            //       Icons.arrow_right,
+                            //       color: Colors.white,
+                            //       size: 10,
+                            //     ),
+                            //     Text(
+                            //       'Histoire',
+                            //       style: TextStyle(
+                            //         color: Colors.grey,
+                            //         fontSize: 8,
+                            //       ),
+                            //     ),
+                            //   ],
+                            // )
                           ],
                         )
                       ],
@@ -645,7 +772,7 @@ class _MyHomePageState extends State<MyHomePage> {
       height: 250,
       width: double.infinity,
       child: FutureBuilder<List<dynamic>>(
-          future: videosProviders.allMovies(1),
+          future: videosProviders.allMovies(2),
           builder: (context, snapshot){
             if(snapshot.data != null){
               return ListView.builder(
@@ -653,11 +780,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: snapshot.data?.length,
                 scrollDirection: Axis.horizontal,
                 itemBuilder: (BuildContext context, int index) {
+                  incre = snapshot.data?[index][1].length;
+                  int ic = (incre as int);
                   return InkWell(
                     onTap: (){
-                      dynamic item = videosProviders.returnFilm(snapshot.data![index]);
+                      dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
 
-                      videosProviders.ifSimilaire(snapshot.data![index]['id']);
+                      videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
                       Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
                      // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
                     },
@@ -672,9 +801,26 @@ class _MyHomePageState extends State<MyHomePage> {
                           Container(
                             height: 200,
                             width: 150,
+                            foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
+                                ? const RotatedCornerDecoration(
+                              color: secondcolor,
+                              geometry: const BadgeGeometry(width: 48, height: 48),
+                              textSpan: const TextSpan(
+                                text: 'Nouveau',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  // letterSpacing: 1,
+                                  // fontWeight: FontWeight.bold,
+                                  fontFamily: 'PopBold',
+                                  color: Colors.white,
+                                  shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
+                                ),
+                              ),
+                            )
+                                : BoxDecoration(),
                             decoration: BoxDecoration(
                                 image: DecorationImage(
-                                    image: NetworkImage(safariapi.getImage() + snapshot.data![index]['image'].toString()),
+                                    image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
                                     fit: BoxFit.cover),
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(5.0)),
@@ -686,7 +832,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                snapshot.data![index]['titre'],
+                                snapshot.data![index][0]['titre'],
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 softWrap: true,
@@ -699,39 +845,45 @@ class _MyHomePageState extends State<MyHomePage> {
                               SizedBox(
                                 height: 5,
                               ),
-                              Row(
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                runAlignment: WrapAlignment.center,
+                                // crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 5.0,
+                                runSpacing: 5.0,
                                 children: [
-                                  Text(
-                                    'Serie',
+                                  // for(int i = 0; i <= ic; i++)
+                                  ic >= 1 ? Text(
+                                    snapshot.data![index][1][0]["nom"].toString(),
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 8,
                                     ),
-                                  ),
-                                  Icon(
+                                  ) :SizedBox(),
+                                  ic > 1 ? Icon(
                                     Icons.arrow_right,
                                     color: Colors.white,
                                     size: 10,
-                                  ),
-                                  Text(
-                                    'Documentaire',
+                                  ) : SizedBox(),
+                                  ic >= 2 ? Text(
+                                    snapshot.data![index][1][1]["nom"].toString(),
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 8,
                                     ),
-                                  ),
-                                  Icon(
+                                  ) :SizedBox(),
+                                  ic > 2 ? Icon(
                                     Icons.arrow_right,
                                     color: Colors.white,
                                     size: 10,
-                                  ),
-                                  Text(
-                                    'Histoire',
+                                  ) :SizedBox(),
+                                  ic >= 3 ? Text(
+                                    snapshot.data![index][1][2]["nom"].toString(),
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 8,
                                     ),
-                                  ),
+                                  ) :SizedBox(),
                                 ],
                               )
                             ],
@@ -765,11 +917,13 @@ class _MyHomePageState extends State<MyHomePage> {
               itemCount: snapshot.data?.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
+                incre = snapshot.data?[index][1].length;
+                int ic = (incre as int);
                 return InkWell(
                   onTap: (){
-                    dynamic item = videosProviders.returnFilm(snapshot.data![index]);
+                    dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
 
-                    videosProviders.ifSimilaire(snapshot.data![index]['id']);
+                    videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
                    // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
                   },
@@ -784,9 +938,26 @@ class _MyHomePageState extends State<MyHomePage> {
                         Container(
                           height: 200,
                           width: 150,
+                          foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
+                              ? const RotatedCornerDecoration(
+                            color: secondcolor,
+                            geometry: const BadgeGeometry(width: 48, height: 48),
+                            textSpan: const TextSpan(
+                              text: 'Nouveau',
+                              style: TextStyle(
+                                fontSize: 10,
+                                // letterSpacing: 1,
+                                // fontWeight: FontWeight.bold,
+                                fontFamily: 'PopBold',
+                                color: Colors.white,
+                                shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
+                              ),
+                            ),
+                          )
+                              : BoxDecoration(),
                           decoration: BoxDecoration(
                               image: DecorationImage(
-                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index]['image'].toString()),
+                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
                                   fit: BoxFit.cover),
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(5.0)),
@@ -798,7 +969,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              snapshot.data![index]['titre'],
+                              snapshot.data![index][0]['titre'],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               softWrap: true,
@@ -811,39 +982,45 @@ class _MyHomePageState extends State<MyHomePage> {
                             SizedBox(
                               height: 5,
                             ),
-                            Row(
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              runAlignment: WrapAlignment.center,
+                              // crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 5.0,
+                              runSpacing: 5.0,
                               children: [
-                                Text(
-                                  'Serie',
+                                // for(int i = 0; i <= ic; i++)
+                                ic >= 1 ? Text(
+                                  snapshot.data![index][1][0]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
-                                Icon(
+                                ) :SizedBox(),
+                                ic > 1 ? Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                   size: 10,
-                                ),
-                                Text(
-                                  'Documentaire',
+                                ) : SizedBox(),
+                                ic >= 2 ? Text(
+                                  snapshot.data![index][1][1]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
-                                Icon(
+                                ) :SizedBox(),
+                                ic > 2 ? Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                   size: 10,
-                                ),
-                                Text(
-                                  'Histoire',
+                                ) :SizedBox(),
+                                ic >= 3 ? Text(
+                                  snapshot.data![index][1][2]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
+                                ) :SizedBox(),
                               ],
                             )
                           ],
@@ -868,7 +1045,7 @@ class _MyHomePageState extends State<MyHomePage> {
       height: 250,
       width: double.infinity,
       child: FutureBuilder<List<dynamic>>(
-        future: videosProviders.allMovies(2),
+        future: videosProviders.allMovies(4),
         builder: (context, snapshot){
           if(snapshot.data != null){
             return ListView.builder(
@@ -876,11 +1053,13 @@ class _MyHomePageState extends State<MyHomePage> {
               itemCount: snapshot.data?.length,
               scrollDirection: Axis.horizontal,
               itemBuilder: (BuildContext context, int index) {
+                incre = snapshot.data?[index][1].length;
+                int ic = (incre as int);
                 return InkWell(
                   onTap: (){
-                    dynamic item = videosProviders.returnFilm(snapshot.data![index]);
+                    dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
 
-                    videosProviders.ifSimilaire(snapshot.data![index]['id']);
+                    videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
                    // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
                   },
@@ -895,9 +1074,26 @@ class _MyHomePageState extends State<MyHomePage> {
                         Container(
                           height: 200,
                           width: 150,
+                          foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
+                              ? const RotatedCornerDecoration(
+                            color: secondcolor,
+                            geometry: const BadgeGeometry(width: 48, height: 48),
+                            textSpan: const TextSpan(
+                              text: 'Nouveau',
+                              style: TextStyle(
+                                fontSize: 10,
+                                // letterSpacing: 1,
+                                // fontWeight: FontWeight.bold,
+                                fontFamily: 'PopBold',
+                                color: Colors.white,
+                                shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
+                              ),
+                            ),
+                          )
+                              : BoxDecoration(),
                           decoration: BoxDecoration(
                               image: DecorationImage(
-                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index]['image'].toString()),
+                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
                                   fit: BoxFit.cover),
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(5.0)),
@@ -909,7 +1105,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              snapshot.data![index]['titre'],
+                              snapshot.data![index][0]['titre'],
                               style: TextStyle(
                                   fontFamily: 'PopRegular',
                                   fontSize: 12,
@@ -919,39 +1115,45 @@ class _MyHomePageState extends State<MyHomePage> {
                             SizedBox(
                               height: 5,
                             ),
-                            Row(
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              runAlignment: WrapAlignment.center,
+                              // crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 5.0,
+                              runSpacing: 5.0,
                               children: [
-                                Text(
-                                  'Serie',
+                                // for(int i = 0; i <= ic; i++)
+                                ic >= 1 ? Text(
+                                  snapshot.data![index][1][0]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
-                                Icon(
+                                ) :SizedBox(),
+                                ic > 1 ? Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                   size: 10,
-                                ),
-                                Text(
-                                  'Documentaire',
+                                ) : SizedBox(),
+                                ic >= 2 ? Text(
+                                  snapshot.data![index][1][1]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
-                                Icon(
+                                ) :SizedBox(),
+                                ic > 2 ? Icon(
                                   Icons.arrow_right,
                                   color: Colors.white,
                                   size: 10,
-                                ),
-                                Text(
-                                  'Histoire',
+                                ) :SizedBox(),
+                                ic >= 3 ? Text(
+                                  snapshot.data![index][1][2]["nom"].toString(),
                                   style: TextStyle(
                                     color: Colors.grey,
                                     fontSize: 8,
                                   ),
-                                ),
+                                ) :SizedBox(),
                               ],
                             )
                           ],
