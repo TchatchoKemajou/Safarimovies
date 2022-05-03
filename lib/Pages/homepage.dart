@@ -12,6 +12,9 @@ import 'package:safarimovie/constantes.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'dart:async';
 
+import '../Providers/LanguageChangeProvider.dart';
+import '../generated/l10n.dart';
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
@@ -22,6 +25,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   SafariApi safariapi = SafariApi();
   VideosService videoservice = VideosService();
+  String currentlanguage = "Français";
+  List<String> langues = ["Français", "Anglais"];
   var incre;
   //List data = [];
   late Map datas;
@@ -37,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final videosProviders = Provider.of<VideosProviders>(context);
     Timer.periodic(Duration(seconds: 30), (timer) {
       setState(() {
-       videosProviders.allMovies(5);
+       videosProviders.allNotification();
       });
     });
   }
@@ -66,12 +71,12 @@ class _MyHomePageState extends State<MyHomePage> {
           SliverFixedExtentList(
               delegate: SliverChildListDelegate([
                 Container(
-                  height: 1500.0,
+                  height: 1550.0,
                   decoration: BoxDecoration(color: fisrtcolor),
                   child: continu(),
                 )
               ]),
-              itemExtent: 1500.0)
+              itemExtent: 1550.0)
         ],
       ),
     );
@@ -83,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Timer.periodic(Duration(seconds: 30), (timer) {
       setState(() {
         nonlu = 0;
-        videosProviders.allMovies(5);
+        videosProviders.allNotification();
       });
     });
     return Padding(
@@ -99,15 +104,16 @@ class _MyHomePageState extends State<MyHomePage> {
           Row(
             children: [
              FutureBuilder<List<dynamic>>(
-               future: videosProviders.allMovies(5),
+               future: videosProviders.allNotification(),
                  builder: (context, snapshot) {
+                 print(snapshot.data);
                    if(snapshot.data != null){
                      for(int i=0; i < (snapshot.data?.length as int); i++){
                        if(snapshot.data![i][0]['read_at'].toString() == "null"){
                            nonlu = i + 1;
                        }
                      }
-                     print(nonlu);
+                     print("avant le clic" + nonlu.toString());
                      return  IconBadge(
                        icon: Icon(Icons.notifications_none),
                        itemCount: nonlu,
@@ -118,8 +124,11 @@ class _MyHomePageState extends State<MyHomePage> {
                        itemColor: Colors.white,
                        hideZero: true,
                        onTap: () async{
+                         setState(() {
+                           nonlu = 0;
+                           print("apres le clic" + nonlu.toString());
+                         });
                          await videosProviders.readNotification();
-                         nonlu = 0;
                          Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage(notifications: snapshot.data!,)));
                        },
                      );
@@ -325,32 +334,95 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   continu() {
+    final langueProvider = Provider.of<LanguageChangeProvider>(context, listen: false);
+    final videosProviders = Provider.of<VideosProviders>(context);
     return Column(
       children: [
         SizedBox(
           height: 10,
         ),
+
         Padding(
-          padding: EdgeInsets.only(left: 14, right: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: EdgeInsets.only(left: 14, right: 5),
+          child: Column(
             children: [
-              Text(
-                'Continuer',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontFamily: 'PopBold',
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    S.of(context).langue,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontFamily: 'PopRegular',
+                      color: Colors.white,
+                    ),
+                  ),
+                  Consumer<LanguageChangeProvider>(
+                      builder: (context, value, child){
+                        return DropdownButton<String>(
+                          value: value.currentLocaleName,
+                          dropdownColor: fisrtcolor,
+                          icon: Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Icon(
+                              Icons.translate,
+                              color: secondcolor,
+                              size: 18,
+                            ),
+                          ),
+                          iconSize: 24,
+                          //elevation: 16,
+                          underline: Container(
+                            height: 1,
+                            color: fisrtcolor,
+                          ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontFamily: 'PopRegular',
+                          ),
+                          onChanged: (e) async {
+                            setState(() {
+                              currentlanguage = e!;
+                            });
+                            switch (e!) {
+                              case "Français":
+                                value.changeLocale("fr", "Français");
+                                   //await videosProviders.allMovies(1);
+                                break;
+
+                              case "Anglais":
+                                value.changeLocale("en", "Anglais");
+                                  //await videosProviders.allMovies(1);
+                                break;
+                            }
+                          },
+                          items: langues
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        );
+                      }
+                  )
+                ],
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.arrow_forward_ios,
-                  color: secondcolor,
-                  size: 15,
-                ),
-                onPressed: null,
+              SizedBox(height: 10,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Continuer',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontFamily: 'PopBold',
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

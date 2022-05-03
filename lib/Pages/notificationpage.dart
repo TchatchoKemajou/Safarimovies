@@ -18,13 +18,7 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  @override
-  void dispose() {
-    // final videosProviders = Provider.of<VideosProviders>(context, listen: false);
-    // videosProviders.readNotification();
-    // TODO: implement dispose
-    super.dispose();
-  }
+  int nonlu = 0;
   @override
   Widget build(BuildContext context) {
     //var res =
@@ -33,6 +27,13 @@ class _NotificationPageState extends State<NotificationPage> {
       backgroundColor: fisrtcolor,
       appBar: AppBar(
         backgroundColor: fisrtcolor,
+        automaticallyImplyLeading: false,
+        leading: InkWell(
+          onTap: () {
+            Navigator.pop(context);
+          },
+          child: Icon(Icons.arrow_back, color: Colors.white, size: 24,),
+        ),
         title: Text(
           "Centre de notification",
           softWrap: true,

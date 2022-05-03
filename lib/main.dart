@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:safarimovie/Pages/Auth/changepassword.dart';
+import 'package:safarimovie/Pages/splashscreen.dart';
+import 'generated/l10n.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:safarimovie/Pages/Auth/login.dart';
-import 'package:safarimovie/Pages/Auth/register.dart';
-import 'package:safarimovie/Pages/detail.dart';
 import 'package:safarimovie/Providers/videosProvider.dart';
-
-import 'Pages/homepages.dart';
+import 'Providers/LanguageChangeProvider.dart';
 import 'Providers/userProvider.dart';
 
 void main() {
@@ -28,10 +27,68 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<UserProvider>(create: (_) => UserProvider()),
         Provider<VideosProviders>(create: (_) => VideosProviders()),
+        ChangeNotifierProvider(
+          create: (context) =>  LanguageChangeProvider(),
+        )
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Login(),
+      child: Builder(
+        builder: (context) =>
+        Consumer<LanguageChangeProvider>(
+            builder: (context, value, child){
+              return value.doneLoading == true ? MaterialApp(
+                locale: Provider.of<LanguageChangeProvider>(context, listen: true).currentLocale,
+                localizationsDelegates: [
+                  S.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: S.delegate.supportedLocales,
+                debugShowCheckedModeBanner: false,
+                home: Login(),
+              ) : SplashScreen(context: context,);
+            }
+        ),
+      ),
+    );
+  }
+}
+
+
+class SplashScreen extends StatefulWidget {
+  final BuildContext context;
+  const SplashScreen({Key? key, required this.context}) : super(key: key);
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  void getdata() async{
+    await Future.delayed(Duration(seconds: 2));
+    widget.context.read<LanguageChangeProvider>().doneLoading = true;
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getdata();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          // child: Image(
+          //   image: AssetImage('assets/images/logoc.png'),
+          //   //height:  MediaQuery.of(widget.context).size.height *0.4,
+          // ),
+        ),
       ),
     );
   }

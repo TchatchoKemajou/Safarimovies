@@ -14,12 +14,24 @@ class VideosService{
   String findAllRequest = "/search";
   String readNotifRequest = "/readnotification";
 
+  String notificationRequest = "/notification";
+
   getAllMovies(pays, lang) async {
-    var fullUrl = safariApi.getUrl() + allMoviesRequest + "/$pays/";
+    var fullUrl = safariApi.getUrl() + allMoviesRequest + "/$pays/$lang";
     final String token = await safariApi.getToken();
     return http.get(
       Uri.parse(fullUrl),
       headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  notification() async{
+    var fullUrl = safariApi.getUrl() + notificationRequest;
+    final String token = await safariApi.getToken();
+
+    return http.get(
+        Uri.parse(fullUrl),
+        headers: safariApi.setHeadersWithToken(token)
     );
   }
 

@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 class SafariApi{
 
   //static const String baseurl = 'http://172.20.10.4:8000';
-  static const String baseurl = 'http://192.168.100.4:8000';
+  static const String baseurl = 'http://192.168.100.50:8000';
   //static const String baseurl = "https://fbf2-154-72-169-186.ngrok.io";
   final String _url = baseurl + '/api';
   final String _imgUrl= baseurl + '/images/';
@@ -66,7 +63,6 @@ class SafariApi{
   setToken(String token) async {
     SharedPreferences localStorage = await SharedPreferences.getInstance();
     localStorage.setString('token', token);
-    //localStorage.setString('user', json.encode(body['user']));
   }
 
   deleteToken() async{

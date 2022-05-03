@@ -14,6 +14,8 @@ import 'package:safarimovie/constantes.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
 
+import '../Providers/LanguageChangeProvider.dart';
+
 class ProfilePage extends StatefulWidget {
   //final Map<dynamic, dynamic> user;
   const ProfilePage({
@@ -38,6 +40,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<dynamic, dynamic> user = {};
   SafariApi safariApi = SafariApi();
   UserService userservice = UserService();
+  List<String> langues = ["Français", "Anglais"];
+  String currentlanguage = "Français";
 
   Future<void> getuser() async {
     final Map<dynamic, dynamic> u = await userservice.getinfosuser();
@@ -61,6 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
     getuser();
     final userprovider = Provider.of<UserProvider>(context);
     userprovider.loadUser(user);
+    final langueProvider = Provider.of<LanguageChangeProvider>(context, listen: true);
     return Scaffold(
       backgroundColor: fisrtcolor,
       appBar: appBar(),
@@ -260,6 +265,83 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: EdgeInsets.only(left: 15, right: 15),
               child: Column(
                 children: [
+                  // Container(
+                  //   width: double.infinity,
+                  //   padding: EdgeInsets.only(left: 10, right: 10, bottom: 0, top: 0),
+                  //   decoration: BoxDecoration(
+                  //       color: Colors.black.withOpacity(0.2),
+                  //       borderRadius: BorderRadius.circular(8)
+                  //   ),
+                  //   child: Row(
+                  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //     children: [
+                  //       Row(
+                  //         children: [
+                  //           Icon(
+                  //             Icons.translate,
+                  //             color: Colors.white,
+                  //           ),
+                  //           SizedBox(
+                  //             width: 6,
+                  //           ),
+                  //           Consumer<LanguageChangeProvider>(
+                  //               builder: (context, value, child){
+                  //                 return DropdownButton<String>(
+                  //                   value: value.currentLocaleName,
+                  //                   dropdownColor: fisrtcolor,
+                  //                   icon: Icon(
+                  //                     Icons.arrow_drop_down,
+                  //                     color: fisrtcolor,
+                  //                   ),
+                  //                   iconSize: 24,
+                  //                   //elevation: 16,
+                  //                   underline: Container(
+                  //                     height: 1,
+                  //                     color: fisrtcolor,
+                  //                   ),
+                  //                   style: TextStyle(
+                  //                     color: Colors.white,
+                  //                     fontSize: 15,
+                  //                     fontFamily: 'PopRegular',
+                  //                   ),
+                  //                   onChanged: (e){
+                  //                     setState(() {
+                  //                       currentlanguage = e!;
+                  //                     });
+                  //                     switch (e) {
+                  //
+                  //                       case "Français":
+                  //                         langueProvider.changeLocale("fr", "Français");
+                  //                         break;
+                  //
+                  //                       case "Anglais":
+                  //                         langueProvider.changeLocale("en", "Anglais");
+                  //                         break;
+                  //                     }
+                  //                   },
+                  //                   items: langues
+                  //                       .map<DropdownMenuItem<String>>((String value) {
+                  //                     return DropdownMenuItem<String>(
+                  //                       value: value,
+                  //                       child: Text(value),
+                  //                     );
+                  //                   }).toList(),
+                  //                 );
+                  //               }
+                  //           ),
+                  //         ],
+                  //       ),
+                  //       Icon(
+                  //         Icons.arrow_forward_ios,
+                  //         color: Colors.white,
+                  //         size: 15,
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // SizedBox(
+                  //   height: 6,
+                  // ),
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.only(left: 10, right: 10, bottom: 10, top: 10),

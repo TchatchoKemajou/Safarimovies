@@ -152,8 +152,8 @@ class VideosProviders with ChangeNotifier{
   }
 
    Future<List<dynamic>> allMovies(int i) async{
-    final res = await videosService.getAllMovies("cameroun", "en");
-    print(json.decode(res.body)[7]);
+    final res = await videosService.getAllMovies("mexique", "en");
+   // print(json.decode(res.body)[7]);
     return json.decode(res.body)[i];
   }
   ifSimilaire(id) async{
@@ -216,6 +216,11 @@ Future<List<dynamic>> getAllFavoris() async{
       _ifAddorRetrive = "null";
       notifyListeners();
     }
+  }
+
+  Future<List<dynamic>> allNotification() async{
+    final res = await videosService.notification();
+     return json.decode(res.body);
   }
 
   verifyFavori() async{
