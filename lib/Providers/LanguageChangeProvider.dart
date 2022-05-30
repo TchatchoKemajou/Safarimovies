@@ -37,8 +37,8 @@ class LanguageChangeProvider with ChangeNotifier{
 
   loadLanguage() async {
     await initPreference();
-    this._currentLocale = new Locale(langueStorage!.getString('lang')!);
-    this._currentLocaleName = langueStorage!.getString('langName')!;
+    this._currentLocale = new Locale(langueStorage!.getString('lang') ?? "fr");
+    this._currentLocaleName = langueStorage!.getString('langName') ?? "Français";
     notifyListeners();
   }
 

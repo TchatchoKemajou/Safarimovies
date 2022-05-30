@@ -59,9 +59,7 @@ class _SearchPageState extends State<SearchPage> {
                   return InkWell(
                     onTap: (){
                       dynamic item = videoprovider.returnFilm(video);
-
-                      videoprovider.ifSimilaire(video['id']);
-                      Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videoprovider.similaire,)));
+                      Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
                     },
                     child: Container(
                       height: 200,

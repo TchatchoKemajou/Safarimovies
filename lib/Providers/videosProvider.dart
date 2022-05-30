@@ -7,7 +7,7 @@ class VideosProviders with ChangeNotifier{
   VideosService videosService = VideosService();
 
 
-  String? _videoCreatorId;
+  int? _videoCreatorId;
   String? _videoTitle;
   String? _videoContent;
   String? _videoImages;
@@ -68,9 +68,9 @@ class VideosProviders with ChangeNotifier{
     notifyListeners();
   }
 
-  String get videoCreatorId => _videoCreatorId!;
+  int get videoCreatorId => _videoCreatorId!;
 
-  set videoCreatorId(String value) {
+  set videoCreatorId(int value) {
     _videoCreatorId = value;
   }
 
@@ -151,21 +151,21 @@ class VideosProviders with ChangeNotifier{
     notifyListeners();
   }
 
-   Future<List<dynamic>> allMovies(int i) async{
-    final res = await videosService.getAllMovies("mexique", "en");
-   // print(json.decode(res.body)[7]);
-    return json.decode(res.body)[i];
+   Future<List<dynamic>> allMovies() async{
+    final res = await videosService.getAllMovies("mexique", "");
+    //print(json.decode(res.body));
+    return json.decode(res.body);
   }
-  ifSimilaire(id) async{
-    final res = await videosService.getInfosMovies(int.parse(id));
-    List<dynamic> test = json.decode(res.body)[4];
-    print("similairelist" + "$test");
-    if(json.decode(res.body)[4].length >= 1){
-      _similaire = true;
-      notifyListeners();
-    }else _similaire = false;
-    notifyListeners();
-  }
+  // ifSimilaire(int id) async{
+  //   final res = await videosService.getInfosMovies(id);
+  //   // List<dynamic> test = json.decode(res.body)[4];
+  //   // print("similairelist" + "$test");
+  //   if(json.decode(res.body)[4].length >= 1){
+  //     _similaire = true;
+  //     notifyListeners();
+  //   }else _similaire = false;
+  //   notifyListeners();
+  // }
 
   readNotification() async{
     var res = await videosService.readNotification();
@@ -188,7 +188,7 @@ Future<List<dynamic>> getAllFavoris() async{
 }
 
   Future<List<dynamic>> allSaisons(id) async{
-    final res = await videosService.getInfosMovies(int.tryParse(_videoCreatorId!));
+    final res = await videosService.getInfosMovies(_videoCreatorId!);
     return json.decode(res.body)[3];
   }
 
@@ -224,18 +224,15 @@ Future<List<dynamic>> getAllFavoris() async{
   }
 
   verifyFavori() async{
-    final res = await videosService.verifyIsFavorie(int.tryParse(_videoCreatorId!));
+    final res = await videosService.verifyIsFavorie(_videoCreatorId!);
     _isfavori = json.decode(res.body);
     print(_isfavori);
     notifyListeners();
   }
 
-  Future<List<dynamic>> infosMovies(int i) async{
-    final res = await videosService.getInfosMovies(int.tryParse(_videoCreatorId!));
-    // _isfavori = json.decode(res.body)[5];
-    // notifyListeners();
-    print(json.decode(res.body)[4]);
-    return json.decode(res.body)[i];
+  Future<List<dynamic>> infosMovies() async{
+    final res = await videosService.getInfosMovies(_videoCreatorId!);
+    return json.decode(res.body);
   }
 
   Future<List<dynamic>> episodes(int i) async{
@@ -246,7 +243,7 @@ Future<List<dynamic>> getAllFavoris() async{
 
 
   loadFilm(Map<dynamic, dynamic> item){
-    _videoCreatorId = item["creator_id"].toString();
+    _videoCreatorId = item["creator_id"];
     _videoTitle = item["titre"];
     _videoContent = item["video"];
     _videoImages = item["image"];

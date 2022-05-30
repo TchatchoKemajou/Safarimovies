@@ -2,8 +2,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SafariApi{
 
   //static const String baseurl = 'http://172.20.10.4:8000';
-  static const String baseurl = 'http://192.168.100.50:8000';
-  //static const String baseurl = "https://fbf2-154-72-169-186.ngrok.io";
+  //static const String baseurl = 'http://172.20.10.4:8000';
+  static const String baseurl = 'http://192.168.100.162:8000';
+ // static const String baseurl = "https://3b28-129-0-76-21.eu.ngrok.io";
   final String _url = baseurl + '/api';
   final String _imgUrl= baseurl + '/images/';
   final String _imgUrlPub= baseurl + '/publicites/';

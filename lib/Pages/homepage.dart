@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:rotated_corner_decoration/rotated_corner_decoration.dart';
 import 'package:safarimovie/Api/safariapi.dart';
 import 'package:safarimovie/Pages/detail.dart';
-import 'package:safarimovie/Pages/notificationpage.dart';
 import 'package:safarimovie/Providers/videosProvider.dart';
 import 'package:safarimovie/Services/videosService.dart';
 import 'package:safarimovie/constantes.dart';
@@ -14,6 +13,7 @@ import 'dart:async';
 
 import '../Providers/LanguageChangeProvider.dart';
 import '../generated/l10n.dart';
+import 'notificationpage.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -28,23 +28,62 @@ class _MyHomePageState extends State<MyHomePage> {
   String currentlanguage = "Français";
   List<String> langues = ["Français", "Anglais"];
   var incre;
+  int nonlu = 0;
+  bool lu = false;
+  Timer? timer;
   //List data = [];
   late Map datas;
   List<dynamic> userData = [];
+  List<dynamic> allMovies = [];
+  List<dynamic> films = [];
+  List<dynamic> series = [];
+  List<dynamic> novelas = [];
+  List<dynamic> publicite = [];
+  List<dynamic> webSeries = [];
+  List<dynamic> avatar = [];
+  List<dynamic> notifications = [];
+
+  findAllVideos() async{
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    List<dynamic> a = await videoprovider.allMovies();
+    setState(() {
+      allMovies = a;
+      films = a[1];
+      series = a[2];
+      webSeries = a[3];
+      novelas = a[4];
+      avatar = a[5];
+      publicite = a[0];
+    });
+    print("films : $films");
+  }
+  allNotification() async{
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    List<dynamic> n = await videoprovider.allNotification();
+    setState(() {
+      notifications = n;
+    });
+  }
   //Future<List<dynamic>> notificationList =  [] as Future<List<dynamic>>;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-  }
-
-  loadFutureList() async{
-    final videosProviders = Provider.of<VideosProviders>(context);
-    Timer.periodic(Duration(seconds: 30), (timer) {
+    findAllVideos();
+    allNotification();
+    timer = Timer.periodic(Duration(seconds: 60), (timer) {
       setState(() {
-       videosProviders.allNotification();
+        nonlu = 0;
+        allNotification();
       });
     });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    timer?.cancel();
   }
 
   @override
@@ -64,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
             backgroundColor: fisrtcolor,
             expandedHeight: MediaQuery.of(context).size.height,
             flexibleSpace: FlexibleSpaceBar(
-              background: pub(),
+              background: publicite == [] ? CircularProgressIndicator() :pub(),
               centerTitle: true,
             ),
           ),
@@ -83,14 +122,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   appBar() {
-    int nonlu = 0;
-    final videosProviders = Provider.of<VideosProviders>(context);
-    Timer.periodic(Duration(seconds: 30), (timer) {
-      setState(() {
-        nonlu = 0;
-        videosProviders.allNotification();
-      });
-    });
     return Padding(
       padding: const EdgeInsets.only(left: 10, right: 10),
       child: Row(
@@ -103,61 +134,20 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Row(
             children: [
-             FutureBuilder<List<dynamic>>(
-               future: videosProviders.allNotification(),
-                 builder: (context, snapshot) {
-                 print(snapshot.data);
-                   if(snapshot.data != null){
-                     for(int i=0; i < (snapshot.data?.length as int); i++){
-                       if(snapshot.data![i][0]['read_at'].toString() == "null"){
-                           nonlu = i + 1;
-                       }
-                     }
-                     print("avant le clic" + nonlu.toString());
-                     return  IconBadge(
-                       icon: Icon(Icons.notifications_none),
-                       itemCount: nonlu,
-                       badgeColor: secondcolor,
-                       maxCount: 99,
-                       top: 6,
-                       right: 5,
-                       itemColor: Colors.white,
-                       hideZero: true,
-                       onTap: () async{
-                         setState(() {
-                           nonlu = 0;
-                           print("apres le clic" + nonlu.toString());
-                         });
-                         await videosProviders.readNotification();
-                         Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage(notifications: snapshot.data!,)));
-                       },
-                     );
-                   }else{
-                     return Padding(
-                       padding: const EdgeInsets.only(right: 24),
-                       child: Icon(Icons.notifications_none),
-                     );
-                   }
-                 }),
-             FutureBuilder<List<dynamic>>(
-                future: videosProviders.allMovies(7),
-                  builder: (context, snapshot) {
-                    if(snapshot.data != null){
-                      print(snapshot.data![0]['avatar']);
-                      return CircleAvatar(
-                        radius: 15,
-                        backgroundColor: Colors.white,
-                        backgroundImage: snapshot.data![0]['avatar'] != null ? NetworkImage(safariapi.getProfil() + snapshot.data![0]['avatar'].toString()) : NetworkImage(safariapi.getLogo() + "logomobilenoir.png")
-                      );
-                    }else{
-                      return CircleAvatar(
-                        radius: 15,
-                        backgroundColor: Colors.white,
-                        child: Center(child: Icon(Icons.person, size: 20,),),
-                        //backgroundImage: Icon(Icons.person),
-                      );
-                    }
-                  })
+             notifications.length > 0 ? profile() : Padding(
+               padding: const EdgeInsets.only(right: 24),
+               child: Icon(Icons.notifications_none),
+             ),
+             avatar.length > 0 ? CircleAvatar(
+                 radius: 15,
+                 backgroundColor: Colors.white,
+                 backgroundImage: avatar[0]['avatar'] != null ? NetworkImage(safariapi.getProfil() + avatar[0]['avatar'].toString()) : NetworkImage(safariapi.getLogo() + "logomobilenoir.png")
+             ) : CircleAvatar(
+               radius: 15,
+               backgroundColor: Colors.white,
+               child: Center(child: Icon(Icons.person, size: 20,),),
+               //backgroundImage: Icon(Icons.person),
+             ),
             ],
           )
         ],
@@ -165,64 +155,145 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  pub() {
-    final videoprovider = Provider.of<VideosProviders>(context);
-    Map<dynamic, dynamic> pubencour;
-    return Stack(
-      children: [
-        FutureBuilder<List<dynamic>>(
-          future: videoprovider.allMovies(0),
-            builder: (context, snapshot){
-              if(snapshot.data != null){
-                incre = snapshot.data?.length;
-                int ic = (incre as int) - 1;
-                  //pubencour = snapshot.data![i][0];
-                return Container(
-                  width: double.infinity,
-                  child: Carousel(
-                    dotSize: 6.0,
-                    dotSpacing: 20.0,
-                    dotColor: secondcolor,
-                    indicatorBgPadding: 120.0,
-                    dotBgColor: Colors.transparent,
-                    autoplay: true,
-                    borderRadius: true,
-                    images: [
-                      for(int i = 0; i <= ic; i++)
-                        slide(snapshot.data![i][0], snapshot.data![i][1])
-                    ],
-                  ),
-                );
-              }else{
-                return CircularProgressIndicator();
-              }
-            }
-        ),
-        Positioned(
-          bottom: 120,
-          right: 30,
-          child: Container(
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(
-                color: secondcolor, borderRadius: BorderRadius.circular(25.0)),
-            child: Center(
-              child: IconButton(
-                icon: Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-
-                },
-                // color: thirdcolor,
-              ),
-            ),
-          ),
-        )
-      ],
+  profile(){
+    final videosProviders = Provider.of<VideosProviders>(context, listen: false);
+    for(int i=0; i < notifications.length; i++){
+      if(notifications[i][0]['read_at'].toString() == "null"){
+        setState(() {
+          nonlu = i + 1;
+        });
+      }
+    }
+    return IconBadge(
+      icon: Icon(Icons.notifications_none),
+      itemCount: lu == false ? nonlu : 0,
+      badgeColor: secondcolor,
+      maxCount: 99,
+      top: 6,
+      right: 5,
+      itemColor: Colors.white,
+      hideZero: true,
+      onTap: () async{
+        setState(() {
+          lu = true;
+          nonlu = 0;
+        });
+        Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage(notifications: notifications,)));
+        await videosProviders.readNotification();
+      },
     );
   }
+
+  pub() {
+    if(publicite.length > 0){
+      incre = publicite.length;
+      int ic = (incre as int) - 1;
+      //pubencour = snapshot.data![i][0];
+      return Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            child: Carousel(
+              dotSize: 6.0,
+              dotSpacing: 20.0,
+              dotColor: secondcolor,
+              indicatorBgPadding: 120.0,
+              dotBgColor: Colors.transparent,
+              autoplay: true,
+              borderRadius: true,
+              images: [
+                for(int i = 0; i <= ic; i++)
+                  publicite == [] ? SizedBox() : slide(publicite[i][0], publicite[i][1])
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 120,
+            right: 30,
+            child: Container(
+              height: 50,
+              width: 50,
+              decoration: BoxDecoration(
+                  color: secondcolor, borderRadius: BorderRadius.circular(25.0)),
+              child: Center(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+
+                  },
+                  // color: thirdcolor,
+                ),
+              ),
+            ),
+          )
+        ],
+      );
+    }else{
+      return CircularProgressIndicator();
+    }
+  }
+
+  // pub() {
+  //   final videoprovider = Provider.of<VideosProviders>(context);
+  //   Map<dynamic, dynamic> pubencour;
+  //   return Stack(
+  //     children: [
+  //       FutureBuilder<List<dynamic>>(
+  //         future: videoprovider.allMovies(0),
+  //           builder: (context, snapshot){
+  //             if(snapshot.data != null){
+  //               incre = snapshot.data?.length;
+  //               int ic = (incre as int) - 1;
+  //                 //pubencour = snapshot.data![i][0];
+  //               return Container(
+  //                 width: double.infinity,
+  //                 child: Carousel(
+  //                   dotSize: 6.0,
+  //                   dotSpacing: 20.0,
+  //                   dotColor: secondcolor,
+  //                   indicatorBgPadding: 120.0,
+  //                   dotBgColor: Colors.transparent,
+  //                   autoplay: true,
+  //                   borderRadius: true,
+  //                   images: [
+  //                     for(int i = 0; i <= ic; i++)
+  //                       slide(snapshot.data![i][0], snapshot.data![i][1])
+  //                   ],
+  //                 ),
+  //               );
+  //             }else{
+  //               return CircularProgressIndicator();
+  //             }
+  //           }
+  //       ),
+  //       Positioned(
+  //         bottom: 120,
+  //         right: 30,
+  //         child: Container(
+  //           height: 50,
+  //           width: 50,
+  //           decoration: BoxDecoration(
+  //               color: secondcolor, borderRadius: BorderRadius.circular(25.0)),
+  //           child: Center(
+  //             child: IconButton(
+  //               icon: Icon(
+  //                 Icons.play_arrow,
+  //                 color: Colors.white,
+  //               ),
+  //               onPressed: () {
+  //
+  //               },
+  //               // color: thirdcolor,
+  //             ),
+  //           ),
+  //         ),
+  //       )
+  //     ],
+  //   );
+  // }
 
   slide(item, genres) {
     incre = genres.length;
@@ -664,313 +735,464 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
   listViewMovie() {
     final videosProviders = Provider.of<VideosProviders>(context);
     return Container(
       height: 250,
       width: double.infinity,
-      child: FutureBuilder<List<dynamic>>(
-        future: videosProviders.allMovies(1),
-        builder: (context, snapshot){
-          if(snapshot.data != null){
-            return ListView.builder(
-              padding: EdgeInsets.only(left: 20),
-              itemCount: snapshot.data?.length,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index) {
-                incre = snapshot.data?[index][1].length;
-                int ic = (incre as int);
-                return InkWell(
-                  onTap: (){
-                    // dynamic film = videosProviders.returnFilm(snapshot.data![index]);
-                    // List<String> ss = videosProviders.saison;
-                    //videosProviders.infosMovies(4);
-                    dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
-
-                    videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
-                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
-                  },
-                  child: Container(
+      child: ListView.builder(
+        padding: EdgeInsets.only(left: 20),
+        itemCount: films.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (BuildContext context, int index) {
+          incre = films[index][1].length;
+          int ic = (incre as int);
+          return InkWell(
+            onTap: (){
+              // dynamic film = videosProviders.returnFilm(snapshot.data![index]);
+              // List<String> ss = videosProviders.saison;
+              //videosProviders.infosMovies(4);
+              dynamic item = videosProviders.returnFilm(films[index][0]);
+              // int id = (films[index][0]['id'] as int);
+              // videosProviders.ifSimilaire(id);
+              Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
+              //Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
+            },
+            child: Container(
+              width: 150,
+              padding: EdgeInsets.only(
+                right: 10,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 200,
                     width: 150,
-                    padding: EdgeInsets.only(
-                      right: 10,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 200,
-                          width: 150,
-                          foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
-                          ? const RotatedCornerDecoration(
-                          color: secondcolor,
-                          geometry: const BadgeGeometry(width: 48, height: 48),
-                          textSpan: const TextSpan(
-                            text: 'Nouveau',
-                            style: TextStyle(
-                              fontSize: 10,
-                              // letterSpacing: 1,
-                              // fontWeight: FontWeight.bold,
-                              fontFamily: 'PopBold',
-                              color: Colors.white,
-                              shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
-                            ),
-                          ),
-                        )
-                          : BoxDecoration(),
-                          decoration: BoxDecoration(
-                              image: DecorationImage(
-                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
-                                  fit: BoxFit.cover),
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(5.0)),
+                    foregroundDecoration: films[index][0]['status_periodique'] == "nouveau"
+                        ? const RotatedCornerDecoration(
+                      color: secondcolor,
+                      geometry: const BadgeGeometry(width: 48, height: 48),
+                      textSpan: const TextSpan(
+                        text: 'Nouveau',
+                        style: TextStyle(
+                          fontSize: 10,
+                          // letterSpacing: 1,
+                          // fontWeight: FontWeight.bold,
+                          fontFamily: 'PopBold',
+                          color: Colors.white,
+                          shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              snapshot.data![index][0]['titre'].toString(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: true,
-                              style: TextStyle(
-                                  fontFamily: 'PopRegular',
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800),
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              runAlignment: WrapAlignment.center,
-                              // crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 5.0,
-                              runSpacing: 5.0,
-                              children: [
-                                // for(int i = 0; i <= ic; i++)
-                                ic >= 1 ? Text(
-                                  snapshot.data![index][1][0]["nom"].toString(),
-                                        style: TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 8,
-                                        ),
-                                ) :SizedBox(),
-                                ic > 1 ? Icon(
-                                  Icons.arrow_right,
-                                  color: Colors.white,
-                                  size: 10,
-                                ) : SizedBox(),
-                                ic >= 2 ? Text(
-                                  snapshot.data![index][1][1]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                                ic > 2 ? Icon(
-                                  Icons.arrow_right,
-                                  color: Colors.white,
-                                  size: 10,
-                                ) :SizedBox(),
-                                ic >= 3 ? Text(
-                                  snapshot.data![index][1][2]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                              ],
-                            )
-                            // Row(
-                            //   children: [
-                            //     Text(
-                            //       'Serie',
-                            //       style: TextStyle(
-                            //         color: Colors.grey,
-                            //         fontSize: 8,
-                            //       ),
-                            //     ),
-                            //     Icon(
-                            //       Icons.arrow_right,
-                            //       color: Colors.white,
-                            //       size: 10,
-                            //     ),
-                            //     Text(
-                            //       'Documentaire',
-                            //       style: TextStyle(
-                            //         color: Colors.grey,
-                            //         fontSize: 8,
-                            //       ),
-                            //     ),
-                            //     Icon(
-                            //       Icons.arrow_right,
-                            //       color: Colors.white,
-                            //       size: 10,
-                            //     ),
-                            //     Text(
-                            //       'Histoire',
-                            //       style: TextStyle(
-                            //         color: Colors.grey,
-                            //         fontSize: 8,
-                            //       ),
-                            //     ),
-                            //   ],
-                            // )
-                          ],
-                        )
-                      ],
-                    ),
+                      ),
+                    )
+                        : BoxDecoration(),
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(safariapi.getImage() + films[index][0]['image'].toString()),
+                            fit: BoxFit.cover),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5.0)),
                   ),
-                );
-              },
-            );
-          }else{
-            return CircularProgressIndicator();
-          }
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        films[index][0]['titre'].toString(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                        style: TextStyle(
+                            fontFamily: 'PopRegular',
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        // crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 5.0,
+                        runSpacing: 5.0,
+                        children: [
+                          // for(int i = 0; i <= ic; i++)
+                          ic >= 1 ? Text(
+                            films[index][1][0]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 1 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) : SizedBox(),
+                          ic >= 2 ? Text(
+                            films[index][1][1]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 2 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) :SizedBox(),
+                          ic >= 3 ? Text(
+                            films[index][1][2]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                        ],
+                      )
+                      // Row(
+                      //   children: [
+                      //     Text(
+                      //       'Serie',
+                      //       style: TextStyle(
+                      //         color: Colors.grey,
+                      //         fontSize: 8,
+                      //       ),
+                      //     ),
+                      //     Icon(
+                      //       Icons.arrow_right,
+                      //       color: Colors.white,
+                      //       size: 10,
+                      //     ),
+                      //     Text(
+                      //       'Documentaire',
+                      //       style: TextStyle(
+                      //         color: Colors.grey,
+                      //         fontSize: 8,
+                      //       ),
+                      //     ),
+                      //     Icon(
+                      //       Icons.arrow_right,
+                      //       color: Colors.white,
+                      //       size: 10,
+                      //     ),
+                      //     Text(
+                      //       'Histoire',
+                      //       style: TextStyle(
+                      //         color: Colors.grey,
+                      //         fontSize: 8,
+                      //       ),
+                      //     ),
+                      //   ],
+                      // )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
         },
       ),
     );
   }
+  // listViewMovie() {
+  //   final videosProviders = Provider.of<VideosProviders>(context);
+  //   return Container(
+  //     height: 250,
+  //     width: double.infinity,
+  //     child: FutureBuilder<List<dynamic>>(
+  //       future: videosProviders.allMovies(1),
+  //       builder: (context, snapshot){
+  //         if(snapshot.data != null){
+  //           return ListView.builder(
+  //             padding: EdgeInsets.only(left: 20),
+  //             itemCount: snapshot.data?.length,
+  //             scrollDirection: Axis.horizontal,
+  //             itemBuilder: (BuildContext context, int index) {
+  //               incre = snapshot.data?[index][1].length;
+  //               int ic = (incre as int);
+  //               return InkWell(
+  //                 onTap: (){
+  //                   // dynamic film = videosProviders.returnFilm(snapshot.data![index]);
+  //                   // List<String> ss = videosProviders.saison;
+  //                   //videosProviders.infosMovies(4);
+  //                   dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
+  //
+  //                   videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
+  //                   Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
+  //                 },
+  //                 child: Container(
+  //                   width: 150,
+  //                   padding: EdgeInsets.only(
+  //                     right: 10,
+  //                   ),
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Container(
+  //                         height: 200,
+  //                         width: 150,
+  //                         foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
+  //                         ? const RotatedCornerDecoration(
+  //                         color: secondcolor,
+  //                         geometry: const BadgeGeometry(width: 48, height: 48),
+  //                         textSpan: const TextSpan(
+  //                           text: 'Nouveau',
+  //                           style: TextStyle(
+  //                             fontSize: 10,
+  //                             // letterSpacing: 1,
+  //                             // fontWeight: FontWeight.bold,
+  //                             fontFamily: 'PopBold',
+  //                             color: Colors.white,
+  //                             shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
+  //                           ),
+  //                         ),
+  //                       )
+  //                         : BoxDecoration(),
+  //                         decoration: BoxDecoration(
+  //                             image: DecorationImage(
+  //                                 image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
+  //                                 fit: BoxFit.cover),
+  //                             color: Colors.white,
+  //                             borderRadius: BorderRadius.circular(5.0)),
+  //                       ),
+  //                       SizedBox(
+  //                         height: 10,
+  //                       ),
+  //                       Column(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: [
+  //                           Text(
+  //                             snapshot.data![index][0]['titre'].toString(),
+  //                             maxLines: 1,
+  //                             overflow: TextOverflow.ellipsis,
+  //                             softWrap: true,
+  //                             style: TextStyle(
+  //                                 fontFamily: 'PopRegular',
+  //                                 fontSize: 12,
+  //                                 color: Colors.white,
+  //                                 fontWeight: FontWeight.w800),
+  //                           ),
+  //                           SizedBox(
+  //                             height: 5,
+  //                           ),
+  //                           Wrap(
+  //                             alignment: WrapAlignment.center,
+  //                             runAlignment: WrapAlignment.center,
+  //                             // crossAxisAlignment: WrapCrossAlignment.center,
+  //                             spacing: 5.0,
+  //                             runSpacing: 5.0,
+  //                             children: [
+  //                               // for(int i = 0; i <= ic; i++)
+  //                               ic >= 1 ? Text(
+  //                                 snapshot.data![index][1][0]["nom"].toString(),
+  //                                       style: TextStyle(
+  //                                         color: Colors.grey,
+  //                                         fontSize: 8,
+  //                                       ),
+  //                               ) :SizedBox(),
+  //                               ic > 1 ? Icon(
+  //                                 Icons.arrow_right,
+  //                                 color: Colors.white,
+  //                                 size: 10,
+  //                               ) : SizedBox(),
+  //                               ic >= 2 ? Text(
+  //                                 snapshot.data![index][1][1]["nom"].toString(),
+  //                                 style: TextStyle(
+  //                                   color: Colors.grey,
+  //                                   fontSize: 8,
+  //                                 ),
+  //                               ) :SizedBox(),
+  //                               ic > 2 ? Icon(
+  //                                 Icons.arrow_right,
+  //                                 color: Colors.white,
+  //                                 size: 10,
+  //                               ) :SizedBox(),
+  //                               ic >= 3 ? Text(
+  //                                 snapshot.data![index][1][2]["nom"].toString(),
+  //                                 style: TextStyle(
+  //                                   color: Colors.grey,
+  //                                   fontSize: 8,
+  //                                 ),
+  //                               ) :SizedBox(),
+  //                             ],
+  //                           )
+  //                           // Row(
+  //                           //   children: [
+  //                           //     Text(
+  //                           //       'Serie',
+  //                           //       style: TextStyle(
+  //                           //         color: Colors.grey,
+  //                           //         fontSize: 8,
+  //                           //       ),
+  //                           //     ),
+  //                           //     Icon(
+  //                           //       Icons.arrow_right,
+  //                           //       color: Colors.white,
+  //                           //       size: 10,
+  //                           //     ),
+  //                           //     Text(
+  //                           //       'Documentaire',
+  //                           //       style: TextStyle(
+  //                           //         color: Colors.grey,
+  //                           //         fontSize: 8,
+  //                           //       ),
+  //                           //     ),
+  //                           //     Icon(
+  //                           //       Icons.arrow_right,
+  //                           //       color: Colors.white,
+  //                           //       size: 10,
+  //                           //     ),
+  //                           //     Text(
+  //                           //       'Histoire',
+  //                           //       style: TextStyle(
+  //                           //         color: Colors.grey,
+  //                           //         fontSize: 8,
+  //                           //       ),
+  //                           //     ),
+  //                           //   ],
+  //                           // )
+  //                         ],
+  //                       )
+  //                     ],
+  //                   ),
+  //                 ),
+  //               );
+  //             },
+  //           );
+  //         }else{
+  //           return CircularProgressIndicator();
+  //         }
+  //       },
+  //     ),
+  //   );
+  // }
 
   listViewSeries() {
     final videosProviders = Provider.of<VideosProviders>(context);
     return Container(
       height: 250,
       width: double.infinity,
-      child: FutureBuilder<List<dynamic>>(
-          future: videosProviders.allMovies(2),
-          builder: (context, snapshot){
-            if(snapshot.data != null){
-              return ListView.builder(
-                padding: EdgeInsets.only(left: 20),
-                itemCount: snapshot.data?.length,
-                scrollDirection: Axis.horizontal,
-                itemBuilder: (BuildContext context, int index) {
-                  incre = snapshot.data?[index][1].length;
-                  int ic = (incre as int);
-                  return InkWell(
-                    onTap: (){
-                      dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
-
-                      videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
-                      Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
-                     // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
-                    },
-                    child: Container(
-                      width: 150,
-                      padding: EdgeInsets.only(
-                        right: 10,
+      child: ListView.builder(
+        padding: EdgeInsets.only(left: 20),
+        itemCount: series.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (BuildContext context, int index) {
+          incre = series[index][1].length;
+          int ic = (incre as int);
+          return InkWell(
+            onTap: (){
+              dynamic item = videosProviders.returnFilm(series[index][0]);
+              Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
+              // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
+            },
+            child: Container(
+              width: 150,
+              padding: EdgeInsets.only(
+                right: 10,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 200,
+                    width: 150,
+                    foregroundDecoration: series[index][0]['status_periodique'] == "nouveau"
+                        ? const RotatedCornerDecoration(
+                      color: secondcolor,
+                      geometry: const BadgeGeometry(width: 48, height: 48),
+                      textSpan: const TextSpan(
+                        text: 'Nouveau',
+                        style: TextStyle(
+                          fontSize: 10,
+                          // letterSpacing: 1,
+                          // fontWeight: FontWeight.bold,
+                          fontFamily: 'PopBold',
+                          color: Colors.white,
+                          shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    )
+                        : BoxDecoration(),
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(safariapi.getImage() + series[index][0]['image'].toString()),
+                            fit: BoxFit.cover),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5.0)),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        series[index][0]['titre'],
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: true,
+                        style: TextStyle(
+                            fontFamily: 'PopRegular',
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        // crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 5.0,
+                        runSpacing: 5.0,
                         children: [
-                          Container(
-                            height: 200,
-                            width: 150,
-                            foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
-                                ? const RotatedCornerDecoration(
-                              color: secondcolor,
-                              geometry: const BadgeGeometry(width: 48, height: 48),
-                              textSpan: const TextSpan(
-                                text: 'Nouveau',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  // letterSpacing: 1,
-                                  // fontWeight: FontWeight.bold,
-                                  fontFamily: 'PopBold',
-                                  color: Colors.white,
-                                  shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
-                                ),
-                              ),
-                            )
-                                : BoxDecoration(),
-                            decoration: BoxDecoration(
-                                image: DecorationImage(
-                                    image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
-                                    fit: BoxFit.cover),
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(5.0)),
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                snapshot.data![index][0]['titre'],
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                softWrap: true,
-                                style: TextStyle(
-                                    fontFamily: 'PopRegular',
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800),
-                              ),
-                              SizedBox(
-                                height: 5,
-                              ),
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                runAlignment: WrapAlignment.center,
-                                // crossAxisAlignment: WrapCrossAlignment.center,
-                                spacing: 5.0,
-                                runSpacing: 5.0,
-                                children: [
-                                  // for(int i = 0; i <= ic; i++)
-                                  ic >= 1 ? Text(
-                                    snapshot.data![index][1][0]["nom"].toString(),
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 8,
-                                    ),
-                                  ) :SizedBox(),
-                                  ic > 1 ? Icon(
-                                    Icons.arrow_right,
-                                    color: Colors.white,
-                                    size: 10,
-                                  ) : SizedBox(),
-                                  ic >= 2 ? Text(
-                                    snapshot.data![index][1][1]["nom"].toString(),
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 8,
-                                    ),
-                                  ) :SizedBox(),
-                                  ic > 2 ? Icon(
-                                    Icons.arrow_right,
-                                    color: Colors.white,
-                                    size: 10,
-                                  ) :SizedBox(),
-                                  ic >= 3 ? Text(
-                                    snapshot.data![index][1][2]["nom"].toString(),
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 8,
-                                    ),
-                                  ) :SizedBox(),
-                                ],
-                              )
-                            ],
-                          )
+                          // for(int i = 0; i <= ic; i++)
+                          ic >= 1 ? Text(
+                            series[index][1][0]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 1 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) : SizedBox(),
+                          ic >= 2 ? Text(
+                            series[index][1][1]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 2 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) :SizedBox(),
+                          ic >= 3 ? Text(
+                            series[index][1][2]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
                         ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            }
-            else{
-              return CircularProgressIndicator();
-            }
-          }
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -980,132 +1202,121 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container(
       height: 250,
       width: double.infinity,
-      child: FutureBuilder<List<dynamic>>(
-        future: videosProviders.allMovies(3),
-        builder: (context, snapshot){
-          if(snapshot.data != null){
-            return ListView.builder(
-              padding: EdgeInsets.only(left: 20),
-              itemCount: snapshot.data?.length,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index) {
-                incre = snapshot.data?[index][1].length;
-                int ic = (incre as int);
-                return InkWell(
-                  onTap: (){
-                    dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
-
-                    videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
-                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
-                   // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
-                  },
-                  child: Container(
+      child: ListView.builder(
+        padding: EdgeInsets.only(left: 20),
+        itemCount: webSeries.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (BuildContext context, int index) {
+          incre = webSeries[index][1].length;
+          int ic = (incre as int);
+          return InkWell(
+            onTap: (){
+              dynamic item = videosProviders.returnFilm(webSeries[index][0]);
+              Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
+              // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
+            },
+            child: Container(
+              width: 150,
+              padding: EdgeInsets.only(
+                right: 10,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 200,
                     width: 150,
-                    padding: EdgeInsets.only(
-                      right: 10,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 200,
-                          width: 150,
-                          foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
-                              ? const RotatedCornerDecoration(
-                            color: secondcolor,
-                            geometry: const BadgeGeometry(width: 48, height: 48),
-                            textSpan: const TextSpan(
-                              text: 'Nouveau',
-                              style: TextStyle(
-                                fontSize: 10,
-                                // letterSpacing: 1,
-                                // fontWeight: FontWeight.bold,
-                                fontFamily: 'PopBold',
-                                color: Colors.white,
-                                shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
-                              ),
-                            ),
-                          )
-                              : BoxDecoration(),
-                          decoration: BoxDecoration(
-                              image: DecorationImage(
-                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
-                                  fit: BoxFit.cover),
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(5.0)),
+                    foregroundDecoration: webSeries[index][0]['status_periodique'] == "nouveau"
+                        ? const RotatedCornerDecoration(
+                      color: secondcolor,
+                      geometry: const BadgeGeometry(width: 48, height: 48),
+                      textSpan: const TextSpan(
+                        text: 'Nouveau',
+                        style: TextStyle(
+                          fontSize: 10,
+                          // letterSpacing: 1,
+                          // fontWeight: FontWeight.bold,
+                          fontFamily: 'PopBold',
+                          color: Colors.white,
+                          shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              snapshot.data![index][0]['titre'],
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: true,
-                              style: TextStyle(
-                                  fontFamily: 'PopRegular',
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800),
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              runAlignment: WrapAlignment.center,
-                              // crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 5.0,
-                              runSpacing: 5.0,
-                              children: [
-                                // for(int i = 0; i <= ic; i++)
-                                ic >= 1 ? Text(
-                                  snapshot.data![index][1][0]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                                ic > 1 ? Icon(
-                                  Icons.arrow_right,
-                                  color: Colors.white,
-                                  size: 10,
-                                ) : SizedBox(),
-                                ic >= 2 ? Text(
-                                  snapshot.data![index][1][1]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                                ic > 2 ? Icon(
-                                  Icons.arrow_right,
-                                  color: Colors.white,
-                                  size: 10,
-                                ) :SizedBox(),
-                                ic >= 3 ? Text(
-                                  snapshot.data![index][1][2]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                              ],
-                            )
-                          ],
-                        )
-                      ],
-                    ),
+                      ),
+                    )
+                        : BoxDecoration(),
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(safariapi.getImage() + webSeries[index][0]['image'].toString()),
+                            fit: BoxFit.cover),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5.0)),
                   ),
-                );
-              },
-            );
-          }else{
-            return CircularProgressIndicator();
-          }
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        webSeries[index][0]['titre'],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
+                        style: TextStyle(
+                            fontFamily: 'PopRegular',
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        // crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 5.0,
+                        runSpacing: 5.0,
+                        children: [
+                          // for(int i = 0; i <= ic; i++)
+                          ic >= 1 ? Text(
+                            webSeries[index][1][0]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 1 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) : SizedBox(),
+                          ic >= 2 ? Text(
+                            webSeries[index][1][1]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 2 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) :SizedBox(),
+                          ic >= 3 ? Text(
+                            webSeries[index][1][2]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                        ],
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
         },
       )
     );
@@ -1116,131 +1327,120 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container(
       height: 250,
       width: double.infinity,
-      child: FutureBuilder<List<dynamic>>(
-        future: videosProviders.allMovies(4),
-        builder: (context, snapshot){
-          if(snapshot.data != null){
-            return ListView.builder(
-              padding: EdgeInsets.only(left: 20),
-              itemCount: snapshot.data?.length,
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (BuildContext context, int index) {
-                incre = snapshot.data?[index][1].length;
-                int ic = (incre as int);
-                return InkWell(
-                  onTap: (){
-                    dynamic item = videosProviders.returnFilm(snapshot.data![index][0]);
-
-                    videosProviders.ifSimilaire(snapshot.data![index][0]['id']);
-                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videosProviders.similaire,)));
-                   // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
-                  },
-                  child: Container(
+      child: ListView.builder(
+        padding: EdgeInsets.only(left: 20),
+        itemCount: novelas.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (BuildContext context, int index) {
+          incre = novelas[index][1].length;
+          int ic = (incre as int);
+          return InkWell(
+            onTap: (){
+              dynamic item = videosProviders.returnFilm(novelas[index][0]);
+              Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
+              // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: videosProviders.returnFilm(snapshot.data![index]))));
+            },
+            child: Container(
+              width: 150,
+              padding: EdgeInsets.only(
+                right: 10,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 200,
                     width: 150,
-                    padding: EdgeInsets.only(
-                      right: 10,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 200,
-                          width: 150,
-                          foregroundDecoration: snapshot.data![index][0]['status_periodique'] == "nouveau"
-                              ? const RotatedCornerDecoration(
-                            color: secondcolor,
-                            geometry: const BadgeGeometry(width: 48, height: 48),
-                            textSpan: const TextSpan(
-                              text: 'Nouveau',
-                              style: TextStyle(
-                                fontSize: 10,
-                                // letterSpacing: 1,
-                                // fontWeight: FontWeight.bold,
-                                fontFamily: 'PopBold',
-                                color: Colors.white,
-                                shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
-                              ),
-                            ),
-                          )
-                              : BoxDecoration(),
-                          decoration: BoxDecoration(
-                              image: DecorationImage(
-                                  image: NetworkImage(safariapi.getImage() + snapshot.data![index][0]['image'].toString()),
-                                  fit: BoxFit.cover),
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(5.0)),
+                    foregroundDecoration: novelas[index][0]['status_periodique'] == "nouveau"
+                        ? const RotatedCornerDecoration(
+                      color: secondcolor,
+                      geometry: const BadgeGeometry(width: 48, height: 48),
+                      textSpan: const TextSpan(
+                        text: 'Nouveau',
+                        style: TextStyle(
+                          fontSize: 10,
+                          // letterSpacing: 1,
+                          // fontWeight: FontWeight.bold,
+                          fontFamily: 'PopBold',
+                          color: Colors.white,
+                          shadows: [BoxShadow(color: Colors.yellowAccent, blurRadius: 5)],
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              snapshot.data![index][0]['titre'],
-                              style: TextStyle(
-                                  fontFamily: 'PopRegular',
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800),
-                            ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              runAlignment: WrapAlignment.center,
-                              // crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 5.0,
-                              runSpacing: 5.0,
-                              children: [
-                                // for(int i = 0; i <= ic; i++)
-                                ic >= 1 ? Text(
-                                  snapshot.data![index][1][0]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                                ic > 1 ? Icon(
-                                  Icons.arrow_right,
-                                  color: Colors.white,
-                                  size: 10,
-                                ) : SizedBox(),
-                                ic >= 2 ? Text(
-                                  snapshot.data![index][1][1]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                                ic > 2 ? Icon(
-                                  Icons.arrow_right,
-                                  color: Colors.white,
-                                  size: 10,
-                                ) :SizedBox(),
-                                ic >= 3 ? Text(
-                                  snapshot.data![index][1][2]["nom"].toString(),
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 8,
-                                  ),
-                                ) :SizedBox(),
-                              ],
-                            )
-                          ],
-                        )
-                      ],
-                    ),
+                      ),
+                    )
+                        : BoxDecoration(),
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: NetworkImage(safariapi.getImage() + novelas[index][0]['image'].toString()),
+                            fit: BoxFit.cover),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5.0)),
                   ),
-                );
-              },
-            );
-          }else{
-            return CircularProgressIndicator();
-          }
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        novelas[index][0]['titre'],
+                        style: TextStyle(
+                            fontFamily: 'PopRegular',
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        runAlignment: WrapAlignment.center,
+                        // crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 5.0,
+                        runSpacing: 5.0,
+                        children: [
+                          // for(int i = 0; i <= ic; i++)
+                          ic >= 1 ? Text(
+                            novelas[index][1][0]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 1 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) : SizedBox(),
+                          ic >= 2 ? Text(
+                            novelas[index][1][1]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                          ic > 2 ? Icon(
+                            Icons.arrow_right,
+                            color: Colors.white,
+                            size: 10,
+                          ) :SizedBox(),
+                          ic >= 3 ? Text(
+                            novelas[index][1][2]["nom"].toString(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 8,
+                            ),
+                          ) :SizedBox(),
+                        ],
+                      )
+                    ],
+                  )
+                ],
+              ),
+            ),
+          );
         },
-      ),
+      )
     );
   }
 }

@@ -48,6 +48,7 @@ class _ProfilePageState extends State<ProfilePage> {
     setState((){
       user = u;
     });
+    print("user: $user");
   }
 
 
@@ -58,11 +59,12 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    getuser();
   }
 
   @override
   Widget build(BuildContext context) {
-    getuser();
+    //getuser();
     final userprovider = Provider.of<UserProvider>(context);
     userprovider.loadUser(user);
     final langueProvider = Provider.of<LanguageChangeProvider>(context, listen: true);

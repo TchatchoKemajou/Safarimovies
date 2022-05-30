@@ -10,21 +10,25 @@ import '../constantes.dart';
 
 class DetailPage extends StatefulWidget {
   final Map<dynamic, dynamic> film;
-  final bool issimilaire;
+  //final bool issimilaire;
   //final List<String> s;
-  DetailPage({required this.film, required this.issimilaire});
+  DetailPage({
+    required this.film,
+    //required this.issimilaire
+  });
   @override
   _DetailPageState createState() => _DetailPageState();
 }
 
 class _DetailPageState extends State<DetailPage> {
-  var incre;
+  int incre = 0;
   String saison = "Saison 1";
+  List<dynamic> afficheinfos = [];
+  List<dynamic> acteurs = [];
+  List<dynamic> similaire = [];
   int saisonId = 1;
-  //bool iffavori = false;
   late int currentIndex;
   List<String> saisons = [];
-   late bool ifsimilaire;
   List imgList = [
     'assets/images/movie1.jpg',
     'assets/images/movie2.jpg',
@@ -35,15 +39,25 @@ class _DetailPageState extends State<DetailPage> {
   ];
   SafariApi safariapi = SafariApi();
 
+  detailPage() async{
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    List<dynamic> d = await videoprovider.infosMovies();
+    setState(() {
+      afficheinfos = d[2];
+      acteurs = d[1];
+      similaire = d[4];
+    });
+    print(afficheinfos);
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     videoprovider.loadFilm(widget.film);
-    //videoprovider.ifSimilaire(widget.film["creator_id"]);
-    ifsimilaire = widget.issimilaire;
     //saisons = ["Saison 1", "Saison 2", "Saison 3", "Saison 4", "Saison 5", "Saison 6"];
     super.initState();
+    detailPage();
   }
 
   @override
@@ -77,7 +91,7 @@ class _DetailPageState extends State<DetailPage> {
               ),
               listViewActeur(),
               widget.film['rubrique'] != "Film" ? listViewEpisode() : SizedBox(),
-              videoprovider.similaire == true ? listViewSimilaire() : SizedBox(),
+              similaire.length > 0 ? listViewSimilaire() : SizedBox(),
             ],
           ),
         ),
@@ -219,80 +233,149 @@ class _DetailPageState extends State<DetailPage> {
             )
           ],
         ),
-        FutureBuilder<List<dynamic>>(
-          future: videoprovider.infosMovies(2),
-            builder: (context, snapshot){
-              if(snapshot.data != null){
-                //print(snapshot.data);
-                incre = snapshot.data?.length;
-                int ic = (incre as int);
-                return Padding(
-                  padding: const EdgeInsets.only(top: 15),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 5.0,
-                    runSpacing: 5.0,
-                    children: [
-                     // for(int i = 0; i <= ic; i++)
-                      ic >= 1 ? Text(
-                        snapshot.data![0]["nom"].toString(),
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 15,
-                        ),
-                      ) :SizedBox(),
-                      ic > 1 ? Icon(
-                        Icons.arrow_right,
-                        color: Colors.white,
-                        size: 20,
-                      ) : SizedBox(),
-                      ic >= 2 ? Text(
-                        snapshot.data![1]["nom"].toString(),
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 15,
-                        ),
-                      ) :SizedBox(),
-                      ic > 2 ? Icon(
-                        Icons.arrow_right,
-                        color: Colors.white,
-                        size: 15,
-                      ) :SizedBox(),
-                      ic >= 3 ? Text(
-                        snapshot.data![2]["nom"].toString(),
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 15,
-                        ),
-                      ) :SizedBox(),
-                      // Text(
-                      //   'Documentaire',
-                      //   style: TextStyle(
-                      //     color: Colors.grey,
-                      //     fontSize: 15,
-                      //   ),
-                      // ),
-                      // Icon(
-                      //   Icons.arrow_right,
-                      //   color: Colors.white,
-                      //   size: 15,
-                      // ),
-                      // Text(
-                      //   'Histoire',
-                      //   style: TextStyle(
-                      //     color: Colors.grey,
-                      //     fontSize: 15,
-                      //   ),
-                      // ),
-                    ],
-                  ),
-                );
-              }else{
-                return Text("");
-              }
-            }
-        )
+        infoGender()
+        //afficheinfos.length > 0 ? infoGender() : Text("")
+        // FutureBuilder<List<dynamic>>(
+        //   future: videoprovider.infosMovies(2),
+        //     builder: (context, snapshot){
+        //       if(snapshot.data != null){
+        //         //print(snapshot.data);
+        //         incre = snapshot.data?.length;
+        //         int ic = (incre as int);
+        //         return Padding(
+        //           padding: const EdgeInsets.only(top: 15),
+        //           child: Wrap(
+        //             alignment: WrapAlignment.center,
+        //             spacing: 5.0,
+        //             runSpacing: 5.0,
+        //             children: [
+        //              // for(int i = 0; i <= ic; i++)
+        //               ic >= 1 ? Text(
+        //                 snapshot.data![0]["nom"].toString(),
+        //                 style: TextStyle(
+        //                   color: Colors.grey,
+        //                   fontSize: 15,
+        //                 ),
+        //               ) :SizedBox(),
+        //               ic > 1 ? Icon(
+        //                 Icons.arrow_right,
+        //                 color: Colors.white,
+        //                 size: 20,
+        //               ) : SizedBox(),
+        //               ic >= 2 ? Text(
+        //                 snapshot.data![1]["nom"].toString(),
+        //                 style: TextStyle(
+        //                   color: Colors.grey,
+        //                   fontSize: 15,
+        //                 ),
+        //               ) :SizedBox(),
+        //               ic > 2 ? Icon(
+        //                 Icons.arrow_right,
+        //                 color: Colors.white,
+        //                 size: 15,
+        //               ) :SizedBox(),
+        //               ic >= 3 ? Text(
+        //                 snapshot.data![2]["nom"].toString(),
+        //                 style: TextStyle(
+        //                   color: Colors.grey,
+        //                   fontSize: 15,
+        //                 ),
+        //               ) :SizedBox(),
+        //               // Text(
+        //               //   'Documentaire',
+        //               //   style: TextStyle(
+        //               //     color: Colors.grey,
+        //               //     fontSize: 15,
+        //               //   ),
+        //               // ),
+        //               // Icon(
+        //               //   Icons.arrow_right,
+        //               //   color: Colors.white,
+        //               //   size: 15,
+        //               // ),
+        //               // Text(
+        //               //   'Histoire',
+        //               //   style: TextStyle(
+        //               //     color: Colors.grey,
+        //               //     fontSize: 15,
+        //               //   ),
+        //               // ),
+        //             ],
+        //           ),
+        //         );
+        //       }else{
+        //         return Text("");
+        //       }
+        //     }
+        // )
       ],
+    );
+  }
+
+  infoGender(){
+    print(incre);
+    int ic = afficheinfos.length;
+    print(ic);
+    return Padding(
+      padding: const EdgeInsets.only(top: 15),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 5.0,
+        runSpacing: 5.0,
+        children: [
+          // for(int i = 0; i <= ic; i++)
+          ic >= 1 ? Text(
+            afficheinfos[0]["nom"].toString(),
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 15,
+            ),
+          ) :SizedBox(),
+          ic > 1 ? Icon(
+            Icons.arrow_right,
+            color: Colors.white,
+            size: 20,
+          ) : SizedBox(),
+          ic >= 2 ? Text(
+            afficheinfos[1]["nom"].toString(),
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 15,
+            ),
+          ) :SizedBox(),
+          ic > 2 ? Icon(
+            Icons.arrow_right,
+            color: Colors.white,
+            size: 15,
+          ) :SizedBox(),
+          ic >= 3 ? Text(
+            afficheinfos[2]["nom"].toString(),
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 15,
+            ),
+          ) :SizedBox(),
+          // Text(
+          //   'Documentaire',
+          //   style: TextStyle(
+          //     color: Colors.grey,
+          //     fontSize: 15,
+          //   ),
+          // ),
+          // Icon(
+          //   Icons.arrow_right,
+          //   color: Colors.white,
+          //   size: 15,
+          // ),
+          // Text(
+          //   'Histoire',
+          //   style: TextStyle(
+          //     color: Colors.grey,
+          //     fontSize: 15,
+          //   ),
+          // ),
+        ],
+      ),
     );
   }
 
@@ -527,20 +610,11 @@ class _DetailPageState extends State<DetailPage> {
         Container(
           margin: EdgeInsets.symmetric(vertical: 20.0),
           height: 230,
-          child: FutureBuilder<List<dynamic>>(
-            future: videoprovider.infosMovies(1),
-            builder: (context, snapshot){
-              if(snapshot.data != null){
-                return ListView.builder(
-                  padding: EdgeInsets.only(left: 15),
-                  scrollDirection: Axis.horizontal,
-                    itemCount: snapshot.data?.length,
-                    itemBuilder: (context, index) => myActeur(safariapi.getPhoto()+snapshot.data![index]["photo"].toString(), snapshot.data![index]['nom'], "nom acteur")
-                );
-              }else{
-                return CircularProgressIndicator();
-              }
-            },
+          child: ListView.builder(
+              padding: EdgeInsets.only(left: 15),
+              scrollDirection: Axis.horizontal,
+              itemCount: acteurs.length,
+              itemBuilder: (context, index) => myActeur(safariapi.getPhoto()+acteurs[index]["photo"].toString(), acteurs[index]['nom'], "nom acteur")
           ),
         ),
       ],
@@ -648,52 +722,41 @@ class _DetailPageState extends State<DetailPage> {
         SizedBox(
           height: 20,
         ),
-        FutureBuilder<List<dynamic>>(
-            future: videoprovider.infosMovies(4),
-            builder: (context, snapshot){
-              if(snapshot.data != null){
-                return CarouselSlider(
-                  options: CarouselOptions(
-                    height: 400.0,
-                    initialPage: 0,
-                    enlargeCenterPage: true,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        currentIndex = index;
-                      });
-                    },
+        CarouselSlider(
+          options: CarouselOptions(
+            height: 400.0,
+            initialPage: 0,
+            enlargeCenterPage: true,
+            onPageChanged: (index, reason) {
+              setState(() {
+                currentIndex = index;
+              });
+            },
+          ),
+          items: similaire.map((imgUrl) {
+            return Builder(
+              builder: (BuildContext context) {
+                return InkWell(
+                  onTap: () async{
+                    dynamic item = videoprovider.returnFilm(similaire[currentIndex]);
+                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
+                  },
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: EdgeInsets.symmetric(horizontal: 10.0),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                    ),
+                    child: Image.network(
+                      safariapi.getImage() + imgUrl['image'].toString(),
+                      fit: BoxFit.fill,
+                    ),
                   ),
-                  items: snapshot.data?.map((imgUrl) {
-                    return Builder(
-                      builder: (BuildContext context) {
-                        return InkWell(
-                          onTap: () async{
-                            dynamic item = videoprovider.returnFilm(snapshot.data![currentIndex]);
-
-                            videoprovider.ifSimilaire(snapshot.data![currentIndex]['id']);
-                            Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videoprovider.similaire,)));
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            margin: EdgeInsets.symmetric(horizontal: 10.0),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                            ),
-                            child: Image.network(
-                              safariapi.getImage() + imgUrl['image'].toString(),
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
                 );
-              }else{
-                return CircularProgressIndicator();
-              }
-            }
-        ),
+              },
+            );
+          }).toList(),
+        ) ,
       ],
     );
   }

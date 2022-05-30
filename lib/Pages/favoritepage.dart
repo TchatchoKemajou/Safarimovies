@@ -38,9 +38,7 @@ class _FavoritePageState extends State<FavoritePage> {
                 return InkWell(
                   onTap: (){
                     dynamic item = videoprovider.returnFilm(snapshot.data![index]);
-
-                    videoprovider.ifSimilaire(snapshot.data![index]['id']);
-                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videoprovider.similaire,)));
+                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item,)));
                   },
                   child: Container(
                     height: 200,
