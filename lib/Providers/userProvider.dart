@@ -141,7 +141,10 @@ class UserProvider with ChangeNotifier{
   Map<String, dynamic> tomapsendMail(){
     return {
       "email": _email,
-      "code": _code
+      "code": _code,
+      "name": _name,
+      "password": _password,
+      "password_confirmation": _password
     };
   }
 
@@ -190,8 +193,22 @@ class UserProvider with ChangeNotifier{
       _token = tk.toString();
       notifyListeners();
     }else{
-      _loginMessage = "error";
-      notifyListeners();
+      print(body);
+
+      if(body["message"] == null){
+        _loginMessage = "Entrer un mot de passe supérieur à 8 caractère";
+        notifyListeners();
+      }
+
+      if(body["message"] == "User does not exist"){
+        _loginMessage = "Votre adresse est incorrecte";
+        notifyListeners();
+      }
+
+      if(body["message"] == "Password mismatch"){
+        _loginMessage = "Votre mot de passe est incorrect";
+        notifyListeners();
+      }
     }
     //_loginMessage = body["message"];
     //notifyListeners();
@@ -217,8 +234,27 @@ class UserProvider with ChangeNotifier{
     Changecode = generateOtp();
     var res = await userService.sendmailUser(tomapsendMail());
     var body = json.decode(res.body);
-    _emailMessage = body["message"];
-    notifyListeners();
+    if(body["message"] == "Mail send"){
+      _emailMessage = "success";
+      notifyListeners();
+    }else{
+      print(body);
+
+      if(body["errors"][0] == "The email must be a valid email address."){
+        _emailMessage = "votre addresse n'est pas valide";
+        notifyListeners();
+      }
+
+      if(body["errors"][0] == "The email has already been taken."){
+        _emailMessage = "Cette adresse existe déja";
+        notifyListeners();
+      }
+      //
+      // if(body["message"] == "Password mismatch"){
+      //   _loginMessage = "Votre mot de passe est incorrect";
+      //   notifyListeners();
+      // }
+    }
   }
 
   sendmailToUserPassword() async{
@@ -249,17 +285,21 @@ class UserProvider with ChangeNotifier{
     print(body);
     if(body["errors"] != null){
       _registerMessage = "error";
+      notifyListeners();
     }else{
       _registerMessage = "success";
+      notifyListeners();
     }
   }
 
   logAccountUser() async{
     var res = await userService.logout();
     var body = json.decode(res.body);
+    print(body);
     if(body == "success"){
       SafariApi().deleteToken();
       _loginMessage = "success";
+      notifyListeners();
     }
   }
 }

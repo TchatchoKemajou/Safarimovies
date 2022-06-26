@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:motion_toast/motion_toast.dart';
+import 'package:motion_toast/resources/arrays.dart';
 import 'package:provider/provider.dart';
 import 'package:safarimovie/Pages/Auth/otpscreen.dart';
 import 'package:safarimovie/Providers/userProvider.dart';
@@ -130,7 +132,7 @@ class _RegisterState extends State<Register> {
             onChanged: (e) {
               userprovider.Changename = e;
             },
-            validator: (e) => e!.isEmpty ? " incorrect" : null,
+            validator: (e) => e!.isEmpty || e.length > 16 ? "votre nom d'utilisateur doit être compris entre 1 et 16 caractères" : null,
             controller: usernameController,
             maxLines: 1,
             style: TextStyle(
@@ -221,7 +223,7 @@ class _RegisterState extends State<Register> {
             onChanged: (e){
               userprovider.Changepassword = e;
             },
-            validator: (e) => e!.isEmpty ? "Mot de passe non valide":null,
+            validator: (e) => e!.isEmpty || e.length < 8 ? "Mot de passe non valide":null,
             maxLines: 1,
             obscureText: true,
             style: TextStyle(
@@ -304,56 +306,87 @@ class _RegisterState extends State<Register> {
             ),
           ),
           SizedBox(height: 30,),
-          ElevatedButton(
-            onPressed: () async{
-              if(_formKey.currentState!.validate()){
-                setState(() {
-                  isLoading = true;
-                });
-                await userprovider.sendmailToUser();
-                print(userprovider.emailMessage);
-                if(userprovider.emailMessage == "Mail send"){
+          Center(
+            child:
+            isLoading == true
+            ? smallButton()
+            : ElevatedButton(
+              onPressed: () async{
+                if(_formKey.currentState!.validate()){
                   setState(() {
-                    isLoading = false;
+                    isLoading = true;
                   });
-                  Navigator.push(context, new MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "register",)));
+                  await userprovider.sendmailToUser();
+                  if(userprovider.emailMessage == "success"){
+                    setState(() {
+                      isLoading = false;
+                    });
+                    Navigator.push(context, new MaterialPageRoute(builder: (context) => OtpScreen(user: userprovider.tomapregister(), otp: userprovider.code, action: "register",)));
+                  }else{
+                    setState(() {
+                      isLoading = false;
+                    });
+                    errorMessage("error", userprovider.emailMessage);
+                  }
                 }
-              }
-            },
-            child: isLoading == true
-            ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0,),
-                SizedBox(width: 5,),
-                Text(
-                  "Loading",
-                  style: TextStyle(),
-                )
-              ],
-            )
-            :Text(
-              "Continuer",
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: 'PopRegular',
+              },
+              child: Text(
+                "Continuer",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'PopRegular',
+                ),
               ),
-            ),
-            style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.resolveWith((states) => secondcolor),
-                padding: MaterialStateProperty.all(EdgeInsets.only(left: 50, right: 50, top: 5, bottom: 5)),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                      // side: BorderSide(color: Colors.red)
-                    )
-                )
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((states) => secondcolor),
+                  padding: MaterialStateProperty.all(EdgeInsets.only(left: 50, right: 50, top: 5, bottom: 5)),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                        // side: BorderSide(color: Colors.red)
+                      )
+                  )
+              ),
             ),
           ),
         ],
       ),
     );
   }
+  void errorMessage(String title, message){
+    MotionToast.error(
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      description: Text(
+        message,
+        maxLines: 2,
+        softWrap: true,
+        overflow: TextOverflow.ellipsis,
+      ),
+      animationType: ANIMATION.fromLeft,
+      position: MOTION_TOAST_POSITION.top,
+      width: 300,
+    ).show(context);
+  }
 
+  smallButton(){
+    return Container(
+      padding: EdgeInsets.all(5.0),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: secondcolor,
+      ),
+      child: Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+          strokeWidth: 3.0,
+        ),
+      ),
+    );
+  }
 
 }

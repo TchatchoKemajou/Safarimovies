@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:safarimovie/Api/safariapi.dart';
 import 'package:http/http.dart' as http;
 
@@ -13,11 +15,38 @@ class VideosService{
   String isFavorieRequest = "/veriffavoris";
   String findAllRequest = "/search";
   String readNotifRequest = "/readnotification";
-
   String notificationRequest = "/notification";
 
-  getAllMovies(pays, lang) async {
-    var fullUrl = safariApi.getUrl() + allMoviesRequest + "/$pays/$lang";
+  String notificationNonLuRequest = "/notificationnonlu";
+  String checkVisibility = "/addvus";
+
+  String saveSearchRequest = "/savesearch";
+
+
+  postSearchRequest(String query) async {
+    var fullUrl = safariApi.getUrl() + saveSearchRequest;
+    final String token = await safariApi.getToken();
+    Map<String, dynamic> data = {
+      "nom": query
+    };
+    return http.post(
+        Uri.parse(fullUrl),
+        body: jsonEncode(data),
+        headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  postVisibility(id) async {
+    var fullUrl = safariApi.getUrl() + checkVisibility + "/$id";
+    final String token = await safariApi.getToken();
+    return http.post(
+        Uri.parse(fullUrl),
+        headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  getAllMovies(lang) async {
+    var fullUrl = safariApi.getUrl() + allMoviesRequest + "/$lang";
     final String token = await safariApi.getToken();
     return http.get(
       Uri.parse(fullUrl),
@@ -25,8 +54,18 @@ class VideosService{
     );
   }
 
-  notification() async{
-    var fullUrl = safariApi.getUrl() + notificationRequest;
+  notificationNonLu() async{
+    var fullUrl = safariApi.getUrl() + notificationNonLuRequest;
+    final String token = await safariApi.getToken();
+
+    return http.get(
+        Uri.parse(fullUrl),
+        headers: safariApi.setHeadersWithToken(token)
+    );
+  }
+
+  notification(int pagination) async{
+    var fullUrl = safariApi.getUrl() + notificationRequest + "?page=$pagination";
     final String token = await safariApi.getToken();
 
     return http.get(
@@ -45,8 +84,8 @@ readNotification() async{
     );
 }
 
-  getInfosMovies(id) async{
-    var fullUrl = safariApi.getUrl() + infosMoviesRequest + "/$id";
+  getInfosMovies(int id, String lang) async{
+    var fullUrl = safariApi.getUrl() + infosMoviesRequest + "/$id/$lang";
     final String token = await safariApi.getToken();
     return http.get(
       Uri.parse(fullUrl),
@@ -71,9 +110,17 @@ readNotification() async{
       headers: safariApi.setHeadersWithToken(token)
     );
   }
+  findAll(int pagination, String lang) async{
+    var fullUrl = safariApi.getUrl() + findAllRequest + "/$lang/" + "?page=$pagination";
+    final String token = await safariApi.getToken();
+    return http.get(
+        Uri.parse(fullUrl),
+        headers: safariApi.setHeadersWithToken(token)
+    );
+  }
 
-  findAll() async{
-    var fullUrl = safariApi.getUrl() + findAllRequest;
+  findAllResult(String query, String lang) async{
+    var fullUrl = safariApi.getUrl() + findAllRequest + "/$lang" + "/$query";
     final String token = await safariApi.getToken();
     return http.get(
       Uri.parse(fullUrl),

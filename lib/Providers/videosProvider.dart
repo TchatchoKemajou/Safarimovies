@@ -151,11 +151,12 @@ class VideosProviders with ChangeNotifier{
     notifyListeners();
   }
 
-   Future<List<dynamic>> allMovies() async{
-    final res = await videosService.getAllMovies("mexique", "");
+   Future<List<dynamic>> allMovies(String lang) async{
+    final res = await videosService.getAllMovies(lang);
     //print(json.decode(res.body));
     return json.decode(res.body);
   }
+
   // ifSimilaire(int id) async{
   //   final res = await videosService.getInfosMovies(id);
   //   // List<dynamic> test = json.decode(res.body)[4];
@@ -173,13 +174,25 @@ class VideosProviders with ChangeNotifier{
     print(body);
   }
 
-  Future<List<dynamic>> selectAllVideo() async{
-    final res = await videosService.findAll();
-    var body = json.decode(res.body);
-    //print(body);
-    return body;
+  postSearchRequest(String query) async{
+    await videosService.postSearchRequest(query);
+    // var body = json.decode(res.body);
+    // print(body);
   }
 
+  Future<List<dynamic>> selectAllVideo(int pagination, String lang) async{
+    final res = await videosService.findAll(pagination, lang);
+    var body = json.decode(res.body);
+    return body['data'];
+  }
+
+
+  Future<List<dynamic>> selectAllResult(String query, String lang) async{
+    final res = await videosService.findAllResult(query, lang);
+    var body = json.decode(res.body);
+    print(body);
+    return body;
+  }
 
 Future<List<dynamic>> getAllFavoris() async{
     final res = await videosService.allFavorie();
@@ -187,10 +200,10 @@ Future<List<dynamic>> getAllFavoris() async{
     return json.decode(res.body);
 }
 
-  Future<List<dynamic>> allSaisons(id) async{
-    final res = await videosService.getInfosMovies(_videoCreatorId!);
-    return json.decode(res.body)[3];
-  }
+  // Future<List<dynamic>> allSaisons(id) async{
+  //   final res = await videosService.getInfosMovies(_videoCreatorId!);
+  //   return json.decode(res.body)[3];
+  // }
 
   addToFavorie(id) async{
     final res = await videosService.postFavorie(id);
@@ -218,9 +231,14 @@ Future<List<dynamic>> getAllFavoris() async{
     }
   }
 
-  Future<List<dynamic>> allNotification() async{
-    final res = await videosService.notification();
+  Future<List<dynamic>> allNotificationNonLu() async{
+    final res = await videosService.notificationNonLu();
      return json.decode(res.body);
+  }
+
+  Future<List<dynamic>> allNotifications(int pagination) async{
+    final res = await videosService.notification(pagination);
+    return json.decode(res.body);
   }
 
   verifyFavori() async{
@@ -230,8 +248,12 @@ Future<List<dynamic>> getAllFavoris() async{
     notifyListeners();
   }
 
-  Future<List<dynamic>> infosMovies() async{
-    final res = await videosService.getInfosMovies(_videoCreatorId!);
+  postVideoVue(int id) async{
+    await videosService.postVisibility(id);
+  }
+
+  Future<List<dynamic>> infosMovies(String lang) async{
+    final res = await videosService.getInfosMovies(_videoCreatorId!, lang);
     return json.decode(res.body);
   }
 

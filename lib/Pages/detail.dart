@@ -5,6 +5,7 @@ import 'package:safarimovie/Api/safariapi.dart';
 import 'package:safarimovie/Pages/Lecteurs/playvideo.dart';
 import 'package:safarimovie/Providers/videosProvider.dart';
 
+import '../Providers/LanguageChangeProvider.dart';
 import '../constantes.dart';
 
 
@@ -22,13 +23,15 @@ class DetailPage extends StatefulWidget {
 
 class _DetailPageState extends State<DetailPage> {
   int incre = 0;
+  String lang = "fr";
+  String language = "Français";
   String saison = "Saison 1";
   List<dynamic> afficheinfos = [];
   List<dynamic> acteurs = [];
   List<dynamic> similaire = [];
   int saisonId = 1;
-  late int currentIndex;
-  List<String> saisons = [];
+  int currentIndex = 0;
+  List<dynamic> saisons = [];
   List imgList = [
     'assets/images/movie1.jpg',
     'assets/images/movie2.jpg',
@@ -39,15 +42,32 @@ class _DetailPageState extends State<DetailPage> {
   ];
   SafariApi safariapi = SafariApi();
 
+  loadLanguage() {
+    final languageProvider = Provider.of<LanguageChangeProvider>(context, listen: false);
+    String l = languageProvider.currentLocale.toString();
+    setState(() {
+      language = languageProvider.currentLocaleName;
+      if(language == "All"){
+        lang = "all";
+      }else{
+        lang = l;
+      }
+    });
+  }
+
   detailPage() async{
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
-    List<dynamic> d = await videoprovider.infosMovies();
+    List<dynamic> d = await videoprovider.infosMovies(lang);
+   // final s = await videoprovider.allSaisons(widget.film["creator_id"]);
     setState(() {
       afficheinfos = d[2];
       acteurs = d[1];
       similaire = d[4];
+      if(widget.film["rubrique"] != "Film"){
+        saisons = d[3];
+        saisonId = saisons.first['id'];
+      }
     });
-    print(afficheinfos);
   }
 
   @override
@@ -55,8 +75,8 @@ class _DetailPageState extends State<DetailPage> {
     // TODO: implement initState
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     videoprovider.loadFilm(widget.film);
-    //saisons = ["Saison 1", "Saison 2", "Saison 3", "Saison 4", "Saison 5", "Saison 6"];
     super.initState();
+    loadLanguage();
     detailPage();
   }
 
@@ -99,14 +119,10 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
   appBar() {
-    //final videoprovider = Provider.of<VideosProviders>(context);
     final videoprovider2 = Provider.of<VideosProviders>(context);
     setState(() {
       videoprovider2.verifyFavori();
     });
-    // setState(() {
-    //   iffavori = videoprovider.isfavori;
-    // });
     return AppBar(
       automaticallyImplyLeading: true,
       title: Text(
@@ -125,7 +141,6 @@ class _DetailPageState extends State<DetailPage> {
           ),
           onTap: () async{
             if(videoprovider2.isfavori == "faux"){
-              //videoprovider2.Changeisfavori = "vrai";
               await videoprovider2.addToFavorie(widget.film["creator_id"]);
               if(videoprovider2.ifAddorRetrive == "success"){
                 setState(() {
@@ -179,7 +194,7 @@ class _DetailPageState extends State<DetailPage> {
                 color: fisrtcolor.withOpacity(0.4),
               ),
             ),
-            Positioned(
+            widget.film['rubrique'] == "Film" ? Positioned(
               bottom: 20,
               left: 30,
               child: Row(
@@ -215,7 +230,7 @@ class _DetailPageState extends State<DetailPage> {
                   )
                 ],
               ),
-            ),
+            ) : SizedBox(),
             Positioned(
               bottom: 20,
               right: 30,
@@ -417,14 +432,15 @@ class _DetailPageState extends State<DetailPage> {
                       ),
                     ),
                     SizedBox(width: 10,),
-                    Text(
+                    widget.film['rubrique'] == "Film" ? Text(
                       widget.film['qualite'].toString().toUpperCase(),
                       style: TextStyle(
                         color: secondcolor,
                         fontSize: 14,
                         fontFamily: 'PopRegular',
                       ),
-                    ),
+                    )
+                    : SizedBox(),
                   ],
                 )
               ],
@@ -473,77 +489,82 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   episode(item){
-    return Container(
-      child: ListTile(
-        title: Text(
-          item["nom"] + ':  ' + item["titre"],
-              maxLines: 1,
-              softWrap: true,
-              style: TextStyle(
-                fontFamily: 'PopRegular',
-                overflow: TextOverflow.ellipsis,
-                fontSize: 14,
-                color: Colors.white
+    return InkWell(
+      onTap: (){
+        Navigator.push(context, MaterialPageRoute(builder: (context) => PlayVideoPage(video: item)));
+      },
+      child: Container(
+        child: ListTile(
+          title: Text(
+            item["titre"] + ':  ' + item["titre"],
+                maxLines: 1,
+                softWrap: true,
+                style: TextStyle(
+                  fontFamily: 'PopRegular',
+                  overflow: TextOverflow.ellipsis,
+                  fontSize: 14,
+                  color: Colors.white
+                ),
               ),
-            ),
-        // title:  Row(
-        //   children: [
-        //     Text(
-        //        item["nom"] + ':  ',
-        //       style: TextStyle(
-        //           fontFamily: 'PopBold',
-        //           color: Colors.white,
-        //
-        //       ),
-        //     ),
-        //     Text(
-        //       item["titre"],
-        //       maxLines: 1,
-        //       softWrap: true,
-        //       style: TextStyle(
-        //         fontFamily: 'PopRegular',
-        //         overflow: TextOverflow.ellipsis,
-        //         fontSize: 14,
-        //         color: Colors.white
-        //       ),
-        //     ),
-        //   ],
-        // ),
-        subtitle: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text(
-                    'Durée: ',
-                  style: TextStyle(
+          // title:  Row(
+          //   children: [
+          //     Text(
+          //        item["nom"] + ':  ',
+          //       style: TextStyle(
+          //           fontFamily: 'PopBold',
+          //           color: Colors.white,
+          //
+          //       ),
+          //     ),
+          //     Text(
+          //       item["titre"],
+          //       maxLines: 1,
+          //       softWrap: true,
+          //       style: TextStyle(
+          //         fontFamily: 'PopRegular',
+          //         overflow: TextOverflow.ellipsis,
+          //         fontSize: 14,
+          //         color: Colors.white
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          subtitle: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(
+                      'Durée: ',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white
+                    ),
+                  ),
+                  Text(
+                    item["duree"].toString(),
+                    style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      color: Colors.white
+                      color: secondcolor,
+                    ),
                   ),
-                ),
-                Text(
-                  item["duree"].toString(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: secondcolor,
-                  ),
-                ),
-              ],
-            ),
-            Text(
-                item["qualite"].toString().toUpperCase(),
-              style: TextStyle(
-                  color: Colors.white,
-                fontFamily: 'PopRegular'
+                ],
               ),
-            ),
-          ],
-        ),
-        leading: Image.network(
-            safariapi.getImage() + widget.film['image'].toString(),
-          height: 80,
-          width: 100,
-          fit: BoxFit.cover,
+              Text(
+                  item["qualite"].toString().toUpperCase(),
+                style: TextStyle(
+                    color: Colors.white,
+                  fontFamily: 'PopRegular'
+                ),
+              ),
+            ],
+          ),
+          leading: Image.network(
+              safariapi.getImage() + widget.film['image'].toString(),
+            height: 80,
+            width: 100,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
@@ -593,7 +614,7 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   listViewActeur() {
-    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    //final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     return Column(
       children: [
         Container(
@@ -624,7 +645,6 @@ class _DetailPageState extends State<DetailPage> {
   listViewEpisode(){
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     return Container(
-      // height: 500,
       padding: EdgeInsets.only(bottom: 20),
       width: double.infinity,
       child: Column(
@@ -633,49 +653,38 @@ class _DetailPageState extends State<DetailPage> {
             padding: const EdgeInsets.only(left: 15),
             child: Row(
               children: [
-                  FutureBuilder<List<dynamic>>(
-                      future: videoprovider.allSaisons(widget.film["creator_id"]),
-                      builder: (context, snapshot){
-                        print(snapshot.data);
-                        if(snapshot.data != null){
-                          print(snapshot.data);
-                          return DropdownButton<int>(
-                            dropdownColor: fisrtcolor,
-                            value: saisonId,
-                            icon: Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.white,
-                            ),
-                            iconSize: 24,
-                            //elevation: 16,
-                            underline: Container(
-                              height: 1,
-                              color: Colors.white,
-                            ),
-                            onChanged: (e){
-                              setState(() {
-                                saisonId = e!;
-                                print(e);
-                              });
-                            },
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'PopRegular'
-                              // backgroundColor: fisrtcolor,
-                            ),
-                            items: snapshot.data
-                                ?.map((map) {
-                              return DropdownMenuItem<int>(
-                                value: map['id'],
-                                child: Text(map['nom']),
-                              );
-                            }).toList(),
-                          );
-                        }else{
-                          return SizedBox();
-                        }
-                      }
-                  )
+                DropdownButton<int>(
+                  dropdownColor: fisrtcolor,
+                  value: saisonId,
+                  icon: Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.white,
+                  ),
+                  iconSize: 24,
+                  //elevation: 16,
+                  underline: Container(
+                    height: 1,
+                    color: Colors.white,
+                  ),
+                  onChanged: (e){
+                    setState(() {
+                      saisonId = e!;
+                      print(e);
+                    });
+                  },
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'PopRegular'
+                    // backgroundColor: fisrtcolor,
+                  ),
+                  items: saisons
+                      .map((map) {
+                    return DropdownMenuItem<int>(
+                      value: map['id'],
+                      child: Text(map['nom']),
+                    );
+                  }).toList(),
+                )
               ],
             ),
           ),
@@ -745,7 +754,7 @@ class _DetailPageState extends State<DetailPage> {
                     width: MediaQuery.of(context).size.width,
                     margin: EdgeInsets.symmetric(horizontal: 10.0),
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: Colors.white,
                     ),
                     child: Image.network(
                       safariapi.getImage() + imgUrl['image'].toString(),
@@ -761,74 +770,3 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 }
-
-// class ListViewSimilarMovies extends StatefulWidget {
-//   @override
-//   _ListViewSimilarMoviesState createState() => _ListViewSimilarMoviesState();
-// }
-//
-// class _ListViewSimilarMoviesState extends State<ListViewSimilarMovies> {
-//   List imgList = [
-//     'assets/images/movie1.jpg',
-//     'assets/images/movie2.jpg',
-//     'assets/images/movie3.jpg',
-//     'assets/images/movie4.jpg',
-//     'assets/images/movie5.jpg',
-//     'assets/images/movie6.jpg',
-//   ];
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       child: Column(
-//         mainAxisAlignment: MainAxisAlignment.center,
-//         crossAxisAlignment: CrossAxisAlignment.center,
-//         children: <Widget>[
-//           Container(
-//               padding: EdgeInsets.only(left: 20),
-//               width: double.infinity,
-//               child: Text(
-//                 'Films similaire',
-//                 style: TextStyle(
-//                   color: Colors.white,
-//                   fontFamily: 'PopBold',
-//                   fontSize: 18,
-//                 ),
-//               )),
-//           SizedBox(
-//             height: 20,
-//           ),
-//           CarouselSlider(
-//             options: CarouselOptions(
-//                 height: 400.0,
-//                 initialPage: 0,
-//                 enlargeCenterPage: true,
-//             ),
-//             // onPageChanged: (index) {
-//             //   setState(() {
-//             //     index = 0;
-//             //   });
-//             // },
-//             items: imgList.map((imgUrl) {
-//               return Builder(
-//                 builder: (BuildContext context) {
-//                   return Container(
-//                     width: MediaQuery.of(context).size.width,
-//                     margin: EdgeInsets.symmetric(horizontal: 10.0),
-//                     decoration: BoxDecoration(
-//                       color: Colors.green,
-//                     ),
-//                     child: Image.asset(
-//                       imgUrl,
-//                       fit: BoxFit.fill,
-//                     ),
-//                   );
-//                 },
-//               );
-//             }).toList(),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

@@ -1,7 +1,11 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:safarimovie/Pages/splashscreen.dart';
+import 'package:safarimovie/Api/safariapi.dart';
+import 'package:safarimovie/Pages/homepages.dart';
+import 'Services/notificationservice.dart';
 import 'generated/l10n.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:safarimovie/Pages/Auth/login.dart';
@@ -9,9 +13,10 @@ import 'package:safarimovie/Providers/videosProvider.dart';
 import 'Providers/LanguageChangeProvider.dart';
 import 'Providers/userProvider.dart';
 
-void main() {
+Future<void> main() async{
   Provider.debugCheckInvalidValueType = null;
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().initialize();
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     //  DeviceOrientation.portraitDown,
@@ -35,7 +40,7 @@ class MyApp extends StatelessWidget {
         builder: (context) =>
         Consumer<LanguageChangeProvider>(
             builder: (context, value, child){
-              return value.doneLoading == true ? MaterialApp(
+              return MaterialApp(
                 locale: Provider.of<LanguageChangeProvider>(context, listen: true).currentLocale,
                 localizationsDelegates: [
                   S.delegate,
@@ -45,8 +50,9 @@ class MyApp extends StatelessWidget {
                 ],
                 supportedLocales: S.delegate.supportedLocales,
                 debugShowCheckedModeBanner: false,
-                home: Login(),
-              ) : SplashScreen(context: context,);
+               // home: value.doneLoading == true ? Login(): SplashScreen(context: context,),
+                home: SplashScreen(context: context,),
+              );
             }
         ),
       ),
@@ -64,31 +70,39 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  SafariApi safariApi = SafariApi();
+  String token = "";
 
-  void getdata() async{
-    await Future.delayed(Duration(seconds: 2));
-    widget.context.read<LanguageChangeProvider>().doneLoading = true;
+
+  getData() async{
+      final String t = await safariApi.getToken();
+      print("dgbkgfbl : $token");
+      await Future.delayed(Duration(seconds: 2));
+        setState(() {
+          token = t;
+        });
+      //Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => token == "null" || token == "" ? Login(): HomePages()));
+      widget.context.read<LanguageChangeProvider>().doneLoading = true;
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getdata();
+    getData();
+    //navigation();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          // child: Image(
-          //   image: AssetImage('assets/images/logoc.png'),
-          //   //height:  MediaQuery.of(widget.context).size.height *0.4,
-          // ),
-        ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        // child: Image(
+        //   image: AssetImage('assets/images/logoc.png'),
+        //   //height:  MediaQuery.of(widget.context).size.height *0.4,
+        // ),
       ),
     );
   }

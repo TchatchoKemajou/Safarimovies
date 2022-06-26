@@ -111,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             try{
                               String filename = image!.path.split("/").last;
                               final String token = await safariApi.getToken();
-                              var postUri = Uri.parse('http://192.168.100.4:8000/api/updateuser');
+                              var postUri = Uri.parse(safariApi.getUrl() + '/updateuser');
                               var request = new http.MultipartRequest("POST", postUri)
                                 ..headers.addAll(safariApi.setHeadersFormdata(token))
                                 ..files.add(await http.MultipartFile.fromPath('avatar', image!.path , filename: filename, contentType: MediaType('application', 'x-tar')));
@@ -230,10 +230,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               print("je me nomme" + name);
                               await userprovider.updateName(userprovider.id, name);
                               if(userprovider.loginMessage == "success"){
-                                setState(() {
+                                setState(() async {
+                                  getuser();
                                   modifying = false;
-                                });
-                                setState(() {
                                 });
                               }else{
                                 setState(() {
@@ -267,83 +266,6 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: EdgeInsets.only(left: 15, right: 15),
               child: Column(
                 children: [
-                  // Container(
-                  //   width: double.infinity,
-                  //   padding: EdgeInsets.only(left: 10, right: 10, bottom: 0, top: 0),
-                  //   decoration: BoxDecoration(
-                  //       color: Colors.black.withOpacity(0.2),
-                  //       borderRadius: BorderRadius.circular(8)
-                  //   ),
-                  //   child: Row(
-                  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //     children: [
-                  //       Row(
-                  //         children: [
-                  //           Icon(
-                  //             Icons.translate,
-                  //             color: Colors.white,
-                  //           ),
-                  //           SizedBox(
-                  //             width: 6,
-                  //           ),
-                  //           Consumer<LanguageChangeProvider>(
-                  //               builder: (context, value, child){
-                  //                 return DropdownButton<String>(
-                  //                   value: value.currentLocaleName,
-                  //                   dropdownColor: fisrtcolor,
-                  //                   icon: Icon(
-                  //                     Icons.arrow_drop_down,
-                  //                     color: fisrtcolor,
-                  //                   ),
-                  //                   iconSize: 24,
-                  //                   //elevation: 16,
-                  //                   underline: Container(
-                  //                     height: 1,
-                  //                     color: fisrtcolor,
-                  //                   ),
-                  //                   style: TextStyle(
-                  //                     color: Colors.white,
-                  //                     fontSize: 15,
-                  //                     fontFamily: 'PopRegular',
-                  //                   ),
-                  //                   onChanged: (e){
-                  //                     setState(() {
-                  //                       currentlanguage = e!;
-                  //                     });
-                  //                     switch (e) {
-                  //
-                  //                       case "Français":
-                  //                         langueProvider.changeLocale("fr", "Français");
-                  //                         break;
-                  //
-                  //                       case "Anglais":
-                  //                         langueProvider.changeLocale("en", "Anglais");
-                  //                         break;
-                  //                     }
-                  //                   },
-                  //                   items: langues
-                  //                       .map<DropdownMenuItem<String>>((String value) {
-                  //                     return DropdownMenuItem<String>(
-                  //                       value: value,
-                  //                       child: Text(value),
-                  //                     );
-                  //                   }).toList(),
-                  //                 );
-                  //               }
-                  //           ),
-                  //         ],
-                  //       ),
-                  //       Icon(
-                  //         Icons.arrow_forward_ios,
-                  //         color: Colors.white,
-                  //         size: 15,
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
-                  // SizedBox(
-                  //   height: 6,
-                  // ),
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.only(left: 10, right: 10, bottom: 10, top: 10),
@@ -476,8 +398,11 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 InkWell(
                   onTap: () async{
-                    userprovider.logAccountUser();
+                    //await safariApi.deleteToken();
+                    await userprovider.logAccountUser();
                     if(userprovider.loginMessage == "success"){
+                      print(userprovider.loginMessage);
+                      await safariApi.deleteToken();
                       Navigator.pop(context);
                       Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
                     }

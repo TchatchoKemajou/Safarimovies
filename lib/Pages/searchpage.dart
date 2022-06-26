@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:safarimovie/Api/safariapi.dart';
 import 'package:safarimovie/Providers/videosProvider.dart';
+import '../Providers/LanguageChangeProvider.dart';
 import '../constantes.dart';
 import 'detail.dart';
 
@@ -14,18 +16,53 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final RefreshController refreshController = RefreshController(initialRefresh: true);
   final searchController = TextEditingController();
   bool isSearch = false;
+  bool isValidSearch = false;
+  String querySearch = "";
+  int pagination = 1;
   List<dynamic> videos = [];
   List<dynamic> videosSearch = [];
   SafariApi safariapi = SafariApi();
 
-  getAllVideo() async{
-    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
-    List<dynamic> newvideo = (await videoprovider.selectAllVideo()).toList();
+  String language = "Français";
+  String lang = "";
+
+  loadLanguage() {
+    final languageProvider = Provider.of<LanguageChangeProvider>(context, listen: false);
+    String l = languageProvider.currentLocale.toString();
     setState(() {
-      videos = newvideo;
+      language = languageProvider.currentLocaleName;
+      if(language == "All"){
+        lang = "all";
+      }else{
+        lang = l;
+      }
     });
+  }
+
+  getAllVideo() async{
+    loadLanguage();
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    List<dynamic> newvideo = (await videoprovider.selectAllVideo(pagination, lang)).toList();
+    setState(() {
+      videos.addAll(newvideo);
+      pagination++;
+    });
+    //print(videos);
+  }
+
+  getAllResult() async{
+    loadLanguage();
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    List<dynamic> newvideo = (await videoprovider.selectAllResult(querySearch, lang)).toList();
+    setState(() {
+      videosSearch.clear();
+      videosSearch.addAll(newvideo);
+    });
+    // print(querySearch);
+    // print(videosSearch);
   }
 
   @override
@@ -39,7 +76,13 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     final videoprovider = Provider.of<VideosProviders>(context);
     isSearch = (searchController.text.isNotEmpty);
+    if(searchController.text.isEmpty){
+      isValidSearch = false;
+      videosSearch.clear();
+      searchController.clear();
+    }
     bool isListExist = (videos.length > 0);
+    bool isListSearchExist = (videosSearch.length > 0) && (isValidSearch == true);
     return Scaffold(
       backgroundColor: fisrtcolor,
       appBar: appBar(),
@@ -48,33 +91,54 @@ class _SearchPageState extends State<SearchPage> {
           searchWidget(),
           Expanded(
               child: isListExist == true
-                  ? StaggeredGridView.countBuilder(
-                staggeredTileBuilder: (index) => StaggeredTile.fit(2),
-                crossAxisCount: 4,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                itemCount: isSearch == true ? videosSearch.length : videos.length,
-                itemBuilder: (context, index){
-                  final video = isSearch == true ? videosSearch[index] :videos[index];
-                  return InkWell(
-                    onTap: (){
-                      dynamic item = videoprovider.returnFilm(video);
-                      Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
-                    },
-                    child: Container(
-                      height: 200,
-                      width: 150,
-                      decoration: BoxDecoration(
-                          image: DecorationImage(
-                              image: NetworkImage(safariapi.getImage() + video['image'].toString()),
-                              fit: BoxFit.cover),
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(5.0)),
-                    ),
-                  );
-                },
-              )
-                  : Container()
+                  ? SmartRefresher(
+                      controller: refreshController,
+                      enablePullUp: true,
+                      enablePullDown: false,
+                      onLoading: () async{
+                        int p = pagination;
+                        getAllVideo();
+                        if(videos != []){
+                          refreshController.loadComplete();
+                        }else{
+                          refreshController.loadFailed();
+                        }
+                      },
+                    child: StaggeredGridView.countBuilder(
+                        staggeredTileBuilder: (index) => StaggeredTile.fit(2),
+                        crossAxisCount: 4,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        itemCount: isValidSearch == true ? videosSearch.length : videos.length,
+                        itemBuilder: (context, index){
+                            final video = isValidSearch == true ? videosSearch[index] :videos[index];
+                            return InkWell(
+                              onTap: (){
+                                dynamic item = videoprovider.returnFilm(video);
+                                Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
+                              },
+                              child: Container(
+                                height: 200,
+                                width: 150,
+                                decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                        image: NetworkImage(safariapi.getImage() + video['image'].toString()),
+                                        fit: BoxFit.cover),
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(5.0)),
+                              ),
+                            );
+                        },
+              ),
+                  )
+                  : isValidSearch == true && videosSearch.length < 0
+              ? Container(
+                child: Center(
+                  child: Text(
+                    "Aucun élément trouvé, votre requête à été enregistrée, vous serez notifiez si nous trouvons un résultat"
+                  ),
+                )
+              ) : Container()
           )
         ],
       )
@@ -87,30 +151,18 @@ class _SearchPageState extends State<SearchPage> {
     });
   }
 
-  searchFunction(String query){
-    setState(() {
-      isSearch = true;
-    });
-    setState(() {
-      videosSearch = videos.where((element) {
-        return element['titre'].toLowerCase().contains(query.toLowerCase());
-      }).toList();
-    });
-    // final List<dynamic> newVideoList = videos.where((element) {
-    //   return element['titre'].toLowerCase().contains(query.toLowerCase());
-    // }).toList();
-    // setState(() {
-    //   print(newVideoList);
-    //   videosSearch = newVideoList;
-    // });
-  }
-
   searchWidget(){
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 30, top: 20),
       child: TextFormField(
         keyboardType: TextInputType.text,
-        onChanged: searchFunction,
+        onChanged: (e) {
+            setState(() {
+              isSearch = true;
+              querySearch = e;
+            });
+        },
         controller: searchController,
         maxLines: 1,
         style: TextStyle(
@@ -123,9 +175,11 @@ class _SearchPageState extends State<SearchPage> {
             child: Icon(Icons.close, color: secondcolor,),
             onTap: (){
               setState(() {
+                isValidSearch = false;
                 isSearch = false;
+                videosSearch.clear();
+                searchController.clear();
               });
-              searchController.clear();
               FocusScope.of(context).requestFocus(FocusNode());
             },
           )
@@ -137,7 +191,7 @@ class _SearchPageState extends State<SearchPage> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(25)),
               borderSide: BorderSide(
-                  color: secondcolor
+                  color: Colors.white
               )
           ),
           enabledBorder: OutlineInputBorder(
@@ -149,7 +203,23 @@ class _SearchPageState extends State<SearchPage> {
           isDense: true,                      // Added this
           contentPadding: EdgeInsets.all(10),
           //hintText: "login",
-          prefixIcon: Icon(Icons.search, color: Colors.white,),
+          prefixIcon: InkWell(
+            onTap: () async{
+              await getAllResult();
+              isValidSearch = true;
+              if(videosSearch.length  <= 0){
+                await videoprovider.postSearchRequest(querySearch);
+              }
+            },
+            child: Container(
+              margin: EdgeInsets.only(right: 5),
+              decoration: BoxDecoration(
+                color: isSearch == true ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.only(topLeft: Radius.circular(25), bottomLeft: Radius.circular(25))
+              ),
+              child: Icon(Icons.search, color: isSearch == true ? secondcolor : Colors.white,),
+            ),
+          ),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(25)),
           ),
@@ -157,44 +227,6 @@ class _SearchPageState extends State<SearchPage> {
       ),
     );
   }
-
-  // sedfedfsfs(){
-  //   return FutureBuilder<List<dynamic>>(
-  //       future: videoprovider.selectAllVideo(),
-  //       builder: (context, snapshot) {
-  //         if(snapshot.data != null){
-  //           return StaggeredGridView.countBuilder(
-  //             staggeredTileBuilder: (index) => StaggeredTile.fit(2),
-  //             crossAxisCount: 4,
-  //             mainAxisSpacing: 4,
-  //             crossAxisSpacing: 4,
-  //             itemCount: snapshot.data?.length,
-  //             itemBuilder: (context, index){
-  //               return InkWell(
-  //                 onTap: (){
-  //                   // dynamic item = videoprovider.returnFilm(snapshot.data![index]);
-  //                   //
-  //                   // videoprovider.ifSimilaire(snapshot.data![index]['id']);
-  //                   // Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item, issimilaire: videoprovider.similaire,)));
-  //                 },
-  //                 child: Container(
-  //                   height: 200,
-  //                   width: 150,
-  //                   decoration: BoxDecoration(
-  //                       image: DecorationImage(
-  //                           image: NetworkImage(safariapi.getImage() + snapshot.data![index]['image'].toString()),
-  //                           fit: BoxFit.cover),
-  //                       color: Colors.white,
-  //                       borderRadius: BorderRadius.circular(5.0)),
-  //                 ),
-  //               );
-  //             },
-  //           );
-  //         }else{
-  //           return CircularProgressIndicator();
-  //         }
-  //       });
-  // }
   appBar() {
   return AppBar(
     elevation: .0,

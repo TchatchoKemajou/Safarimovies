@@ -281,37 +281,6 @@ class _EnterNewPasswordState extends State<EnterNewPassword> {
     );
   }
 
-  // bigBotton(){
-  //   return ElevatedButton(
-  //     onPressed: () async{
-  //       if(_formKey.currentState!.validate()){
-  //         await userprovider.sendresetPassword();
-  //         if(userprovider.registerMessage == "success"){
-  //           Navigator.pop(context);
-  //           Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
-  //         }
-  //       }
-  //     },
-  //
-  //     child: Text(
-  //       "Valider",
-  //       style: TextStyle(
-  //         fontSize: 18,
-  //         fontFamily: 'PopRegular',
-  //       ),
-  //     ),
-  //     style: ButtonStyle(
-  //         backgroundColor: MaterialStateProperty.resolveWith((states) => secondcolor),
-  //         padding: MaterialStateProperty.all(EdgeInsets.only(left: 50, right: 50)),
-  //         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-  //             RoundedRectangleBorder(
-  //               borderRadius: BorderRadius.circular(5.0),
-  //               // side: BorderSide(color: Colors.red)
-  //             )
-  //         )
-  //     ),
-  //   );
-  // }
   smallButton(){
     return Container(
       padding: EdgeInsets.all(5.0),

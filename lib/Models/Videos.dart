@@ -1,5 +1,3 @@
-
-
 class Videos{
   final String videoCreatorId;
   final String videoTitle;

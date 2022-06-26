@@ -26,14 +26,7 @@ class _HomePagesState extends State<HomePages> {
   @override
   void initState() {
     // TODO: implement initState
-     //final userprovider = Provider.of<UserProvider>(context, listen: false);
-    // user = userprovider.getinfosuser();
-     pages = [MyHomePage(), FavoritePage(), SearchPage(), ProfilePage()];
-     // userprovider.getinfosuser().then((value){
-     //   user = value;
-     //   pages = [MyHomePage(), FavoritePage(), SearchPage(), ProfilePage(user: user,)];
-     // });
-
+    pages = [MyHomePage(), FavoritePage(), SearchPage(), ProfilePage()];
     super.initState();
   }
 

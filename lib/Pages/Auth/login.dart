@@ -20,6 +20,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   SafariApi safariapi = SafariApi();
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -210,24 +211,32 @@ class _LoginState extends State<Login> {
           ),
           SizedBox(height: 30,),
           Center(
-            child: ElevatedButton(
+            child:
+            isLoading == true
+            ? smallButton()
+            : ElevatedButton(
               onPressed: () async{
                 if(_formKey.currentState!.validate()){
+                  setState(() {
+                    isLoading = true;
+                  });
                   await userprovider.loginToAccount();
                   print(userprovider.loginMessage);
                   if(userprovider.loginMessage == "success"){
+                    setState(() {
+                      isLoading = false;
+                    });
                     print(userprovider.token);
                     await safariapi.setToken(userprovider.token);
                     Navigator.of(context).pop();
                     Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
                   }else{
-                    print("mot de passe incorrect");
-                    errorMessage(userprovider.loginMessage);
+                    setState(() {
+                      isLoading = false;
+                    });
+                    errorMessage("error", userprovider.loginMessage);
                   }
                 }
-                //errorMessage();
-                // await userprovider.createAccount();
-                // print(userprovider.registerMessage);
               },
 
               child: Text(
@@ -254,19 +263,39 @@ class _LoginState extends State<Login> {
     );
   }
 
-  void errorMessage(String message){
+  void errorMessage(String title, message){
     MotionToast.error(
       title: Text(
-        message,
+        title,
         style: TextStyle(
           fontWeight: FontWeight.bold,
         ),
       ),
-      description: Text('Please enter your name'),
+      description: Text(
+        message,
+        maxLines: 2,
+        softWrap: true,
+        overflow: TextOverflow.ellipsis,
+      ),
       animationType: ANIMATION.fromLeft,
       position: MOTION_TOAST_POSITION.top,
       width: 300,
     ).show(context);
   }
 
+  smallButton(){
+    return Container(
+      padding: EdgeInsets.all(5.0),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: secondcolor,
+      ),
+      child: Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+          strokeWidth: 3.0,
+        ),
+      ),
+    );
+  }
 }

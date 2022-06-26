@@ -30,15 +30,14 @@ class LanguageChangeProvider with ChangeNotifier{
   initPreference() async{
     if(langueStorage == null){
       langueStorage = await SharedPreferences.getInstance();
-      print(langueStorage?.getString('langName')!);
     }else{
     }
   }
 
   loadLanguage() async {
     await initPreference();
-    this._currentLocale = new Locale(langueStorage!.getString('lang') ?? "fr");
-    this._currentLocaleName = langueStorage!.getString('langName') ?? "Français";
+    this._currentLocale = langueStorage!.getString('lang') == null || langueStorage!.getString('lang') ==  "" ? new Locale("fr")  :new Locale(langueStorage!.getString('lang')!);
+    this._currentLocaleName = langueStorage!.getString('langName') ?? "All";
     notifyListeners();
   }
 
@@ -50,7 +49,6 @@ class LanguageChangeProvider with ChangeNotifier{
   }
 
   changeLocale(String _locale, String _localeName){
-    print("avant     " + langueStorage!.getString('lang')!);
     this._currentLocale = new Locale(_locale);
     this._currentLocaleName = _localeName;
     notifyListeners();

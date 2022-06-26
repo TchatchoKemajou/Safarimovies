@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:better_player/better_player.dart';
+import 'package:provider/provider.dart';
 import 'package:safarimovie/Api/safariapi.dart';
+
+import '../../Providers/videosProvider.dart';
 
 class PlayVideoPage extends StatefulWidget {
   final Map<dynamic, dynamic> video;
@@ -30,14 +33,22 @@ class _PlayVideoPageState extends State<PlayVideoPage> {
     // TODO: implement initState
     BetterPlayerDataSource betterPlayerDataSource = BetterPlayerDataSource(
         BetterPlayerDataSourceType.network,
-        safariapi.getFilm().toString() + widget.video['video'].toString());
+        (widget.video['rubrique'] == "Film" ? safariapi.getFilm().toString() : safariapi.getEpisode().toString()) + widget.video['video'].toString());
     _betterPlayerController = BetterPlayerController(
         const BetterPlayerConfiguration(
           aspectRatio: 16/9,
           autoPlay: true,
+          allowedScreenSleep: false,
         ),
         betterPlayerDataSource: betterPlayerDataSource);
     super.initState();
+    readVideo();
+
+  }
+
+  readVideo() async{
+    final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+    await videoprovider.postVideoVue(widget.video["creator_id"]);
   }
 
 

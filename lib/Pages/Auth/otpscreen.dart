@@ -22,8 +22,22 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   SafariApi safariapi = SafariApi();
   String otpvalue = "";
+  String sendOtp = "";
   bool iscorrect = false, isValide = false;
   bool isLoading = false;
+
+  addOtp(){
+    setState(() {
+      sendOtp = widget.otp;
+    });
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    addOtp();
+  }
+
   @override
   Widget build(BuildContext context) {
     final userprovider = Provider.of<UserProvider>(context,);
@@ -63,7 +77,7 @@ class _OtpScreenState extends State<OtpScreen> {
             iscorrect == false ? Text("") :Text(
               "code incorrect",
               style: TextStyle(
-                color: secondcolor,
+                color: Colors.red,
               ),
             ),
             PinCodeTextField(
@@ -89,55 +103,6 @@ class _OtpScreenState extends State<OtpScreen> {
               //errorAnimationController: errorController,
               //controller: textEditingController,
               onCompleted: (value) async{
-                // if(value == widget.otp){
-                //     await userprovider.createAccount();
-                //     print(userprovider.registerMessage);
-                //     if(userprovider.registerMessage == "success"){
-                //       userprovider.loginToAccount();
-                //       print(userprovider.loginMessage);
-                //       if(userprovider.loginMessage == "success"){
-                //         // setState(() {
-                //         //   isValide = false;
-                //         // });
-                //         safariapi.setToken(userprovider.token);
-                //         Navigator.of(context).pop();
-                //         Navigator.of(context).pop();
-                //         Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
-                //       }
-                //     }
-                //   // setState(() {
-                //   //   isValide = true;
-                //   // });
-                //   // if(widget.action == "register"){
-                //   //   await userprovider.createAccount();
-                //   //   print(userprovider.registerMessage);
-                //   //   if(userprovider.registerMessage == "success"){
-                //   //     userprovider.loginToAccount();
-                //   //     print(userprovider.loginMessage);
-                //   //     if(userprovider.loginMessage == "success"){
-                //   //       // setState(() {
-                //   //       //   isValide = false;
-                //   //       // });
-                //   //       safariapi.setToken(userprovider.token);
-                //   //       Navigator.of(context).pop();
-                //   //       Navigator.of(context).pop();
-                //   //       Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
-                //   //     }
-                //   //   }
-                //   // }else{
-                //   //   // setState(() {
-                //   //   //   isValide = false;
-                //   //   // });
-                //   //   Navigator.of(context).pop();
-                //   //   Navigator.of(context).pop();
-                //   //   Navigator.of(context).pop();
-                //   //   Navigator.push(context, MaterialPageRoute(builder: (context) => ChangePassWord()));
-                //   // }
-                // }else{
-                //   setState(() {
-                //     iscorrect = true;
-                //   });
-                // }
               },
               onChanged: (value) {
                 print(value);
@@ -156,11 +121,12 @@ class _OtpScreenState extends State<OtpScreen> {
               children: [
                 isLoading == true ? smallButton() :ElevatedButton(
                   onPressed: () async{
-                    if(otpvalue == widget.otp){
+                    setState(() {
+                      iscorrect = false;
+                      isLoading = true;
+                    });
+                    if(otpvalue == sendOtp){
                       if(widget.action == "register"){
-                        setState(() {
-                          isLoading = true;
-                        });
                         await userprovider.createAccount();
                         if(userprovider.registerMessage == "success"){
                           userprovider.Changeemail = widget.user['email'];
@@ -177,6 +143,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             Navigator.push(context, new MaterialPageRoute(builder: (context) => HomePages()));
                           }else{
                             setState(() {
+                              iscorrect = true;
                               isLoading = false;
                             });
                           }
@@ -184,6 +151,11 @@ class _OtpScreenState extends State<OtpScreen> {
                       }else{
                         Navigator.push(context, MaterialPageRoute(builder: (context) => EnterNewPassword(id: widget.user['id'],)));
                       }
+                    }else{
+                      setState(() {
+                        iscorrect = true;
+                        isLoading = false;
+                      });
                     }
                   },
                   child: Text(
@@ -204,41 +176,41 @@ class _OtpScreenState extends State<OtpScreen> {
                       )
                   ),
                 ),
-                InkWell(
-                  onTap: (){
-                    // Navigator.of(context).pushReplacement(
-                    //   MaterialPageRoute(builder: (_) => PhoneAuth()),
-                    // );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Vous n'avez pas reçu?  ",
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Vous n'avez pas reçu?  ",
+                      style: TextStyle(
+                          color: Colors.blueGrey,
+                          fontFamily: 'PopBold',
+                          fontSize: 12
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () async{
+                        userprovider.loadUser(widget.user);
+                        await userprovider.sendmailToUser();
+
+                        if(userprovider.emailMessage == "success"){
+                          setState(() {
+                            sendOtp = userprovider.code;
+                          });
+                        }
+                      },
+                      child: Text(
+                        "Renvoyer",
                         style: TextStyle(
-                            color: Colors.blueGrey,
-                            fontFamily: 'PopBold',
-                            fontSize: 12
+                          decoration: TextDecoration.underline,
+                          fontSize: 13,
+                          fontFamily: 'PopBold',
+                          color: Colors.red,
                         ),
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
                       ),
-                      InkWell(
-                        onTap: () {
-                         // Navigator.pushReplacement(context, new MaterialPageRoute(builder: (context) => Login()));
-                        },
-                        child: Text(
-                          "Renvoyer",
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            fontSize: 13,
-                            fontFamily: 'PopBold',
-                            color: Colors.red,
-                          ),
-                          maxLines: 1,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -25,9 +25,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   SafariApi safariapi = SafariApi();
   VideosService videoservice = VideosService();
-  String currentlanguage = "Français";
-  List<String> langues = ["Français", "Anglais"];
+  String currentlanguage = "All";
+  String language = "Français";
+  String lang = "fr";
+  List<String> langues = ["All", "Français", "Anglais"];
   var incre;
+  int currentPub = 3;
   int nonlu = 0;
   bool lu = false;
   Timer? timer;
@@ -41,11 +44,26 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> publicite = [];
   List<dynamic> webSeries = [];
   List<dynamic> avatar = [];
-  List<dynamic> notifications = [];
+  List<dynamic> notificationsNonLu = [];
 
-  findAllVideos() async{
+  loadLanguage() {
+    final languageProvider = Provider.of<LanguageChangeProvider>(context, listen: false);
+    String l = languageProvider.currentLocale.toString();
+    setState(() {
+      language = languageProvider.currentLocaleName;
+      if(language == "All"){
+        lang = "all";
+      }else{
+        lang = l;
+      }
+    });
+  }
+
+  findAllVideos(lang) async{
+    //loadLanguage();
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
-    List<dynamic> a = await videoprovider.allMovies();
+    List<dynamic> a = await videoprovider.allMovies(lang);
+    print(lang);
     setState(() {
       allMovies = a;
       films = a[1];
@@ -55,13 +73,13 @@ class _MyHomePageState extends State<MyHomePage> {
       avatar = a[5];
       publicite = a[0];
     });
-    print("films : $films");
+    print("films : $webSeries");
   }
-  allNotification() async{
+  allNotificationNonlu() async{
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
-    List<dynamic> n = await videoprovider.allNotification();
+    List<dynamic> n = await videoprovider.allNotificationNonLu();
     setState(() {
-      notifications = n;
+      notificationsNonLu = n;
     });
   }
   //Future<List<dynamic>> notificationList =  [] as Future<List<dynamic>>;
@@ -69,12 +87,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    findAllVideos();
-    allNotification();
+    loadLanguage();
+    findAllVideos(lang);
+    allNotificationNonlu();
     timer = Timer.periodic(Duration(seconds: 60), (timer) {
       setState(() {
-        nonlu = 0;
-        allNotification();
+        //nonlu = 0;
+        allNotificationNonlu();
       });
     });
   }
@@ -110,12 +129,21 @@ class _MyHomePageState extends State<MyHomePage> {
           SliverFixedExtentList(
               delegate: SliverChildListDelegate([
                 Container(
-                  height: 1550.0,
                   decoration: BoxDecoration(color: fisrtcolor),
                   child: continu(),
                 )
               ]),
-              itemExtent: 1550.0)
+              itemExtent: films.length > 0 && series.length > 0 && webSeries.length > 0 && novelas.length > 0 ? 1550.0
+                  : films.length > 0 && series.length > 0 && webSeries.length > 0 && novelas.length <= 0 ? 1300.0
+                  : films.length > 0 && series.length > 0 && webSeries.length <= 0 && novelas.length > 0 ? 1300.0
+                  : films.length > 0 && series.length <= 0 && webSeries.length > 0 && novelas.length > 0 ? 1300.0
+                  : films.length <= 0 && series.length > 0 && webSeries.length > 0 && novelas.length > 0 ? 1300.0
+                  : films.length > 0 && series.length > 0 && webSeries.length <= 0 && novelas.length <= 0 ? 1050.0
+                  : films.length > 0 && series.length <= 0 && webSeries.length <= 0 && novelas.length <= 0 ? 800.0
+                  : films.length <= 0 && series.length > 0 && webSeries.length <= 0 && novelas.length > 0 ? 800.0
+                  : films.length <= 0 && series.length <= 0 && webSeries.length <= 0 && novelas.length > 0 ? 800.0
+                  : 800.0
+          )
         ],
       ),
     );
@@ -127,16 +155,24 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset(
-            "assets/images/logo.png",
-            height: MediaQuery.of(context).size.height * 0.4,
-            width: MediaQuery.of(context).size.width * 0.5,
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 10),
+            child: Image.asset(
+              "assets/images/logo.png",
+              height: AppBar().preferredSize.height,
+              width: MediaQuery.of(context).size.width * 0.5,
+              fit: BoxFit.contain,
+            ),
           ),
           Row(
             children: [
-             notifications.length > 0 ? profile() : Padding(
+             notificationsNonLu.length > 0 ? profile() : Padding(
                padding: const EdgeInsets.only(right: 24),
-               child: Icon(Icons.notifications_none),
+               child: InkWell(
+                 onTap: (){
+                   Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
+                 },
+                   child: Icon(Icons.notifications_none)),
              ),
              avatar.length > 0 ? CircleAvatar(
                  radius: 15,
@@ -157,16 +193,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   profile(){
     final videosProviders = Provider.of<VideosProviders>(context, listen: false);
-    for(int i=0; i < notifications.length; i++){
-      if(notifications[i][0]['read_at'].toString() == "null"){
-        setState(() {
-          nonlu = i + 1;
-        });
-      }
-    }
+    nonlu = notificationsNonLu.length;
+    // for(int i=0; i < notifications.length; i++){
+    //   if(notifications[i][0]['read_at'].toString() == "null"){
+    //     setState(() {
+    //       nonlu = i + 1;
+    //     });
+    //   }
+    // }
     return IconBadge(
       icon: Icon(Icons.notifications_none),
-      itemCount: lu == false ? nonlu : 0,
+      itemCount: nonlu,
       badgeColor: secondcolor,
       maxCount: 99,
       top: 6,
@@ -178,13 +215,15 @@ class _MyHomePageState extends State<MyHomePage> {
           lu = true;
           nonlu = 0;
         });
-        Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage(notifications: notifications,)));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationPage()));
         await videosProviders.readNotification();
+        notificationsNonLu.clear();
       },
     );
   }
 
   pub() {
+    final videosProviders = Provider.of<VideosProviders>(context);
     if(publicite.length > 0){
       incre = publicite.length;
       int ic = (incre as int) - 1;
@@ -201,6 +240,12 @@ class _MyHomePageState extends State<MyHomePage> {
               dotBgColor: Colors.transparent,
               autoplay: true,
               borderRadius: true,
+              onImageChange: (i, j){
+                //print("$i   ||   $j");
+                setState(() {
+                  currentPub = j;
+                });
+              },
               images: [
                 for(int i = 0; i <= ic; i++)
                   publicite == [] ? SizedBox() : slide(publicite[i][0], publicite[i][1])
@@ -218,11 +263,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Center(
                 child: IconButton(
                   icon: Icon(
-                    Icons.play_arrow,
+                    Icons.remove_red_eye,
                     color: Colors.white,
                   ),
                   onPressed: () {
-
+                    dynamic item = videosProviders.returnFilm(publicite[currentPub][0]);
+                    Navigator.push(context, new MaterialPageRoute(builder: (context) => DetailPage(film: item)));
                   },
                   // color: thirdcolor,
                 ),
@@ -235,65 +281,6 @@ class _MyHomePageState extends State<MyHomePage> {
       return CircularProgressIndicator();
     }
   }
-
-  // pub() {
-  //   final videoprovider = Provider.of<VideosProviders>(context);
-  //   Map<dynamic, dynamic> pubencour;
-  //   return Stack(
-  //     children: [
-  //       FutureBuilder<List<dynamic>>(
-  //         future: videoprovider.allMovies(0),
-  //           builder: (context, snapshot){
-  //             if(snapshot.data != null){
-  //               incre = snapshot.data?.length;
-  //               int ic = (incre as int) - 1;
-  //                 //pubencour = snapshot.data![i][0];
-  //               return Container(
-  //                 width: double.infinity,
-  //                 child: Carousel(
-  //                   dotSize: 6.0,
-  //                   dotSpacing: 20.0,
-  //                   dotColor: secondcolor,
-  //                   indicatorBgPadding: 120.0,
-  //                   dotBgColor: Colors.transparent,
-  //                   autoplay: true,
-  //                   borderRadius: true,
-  //                   images: [
-  //                     for(int i = 0; i <= ic; i++)
-  //                       slide(snapshot.data![i][0], snapshot.data![i][1])
-  //                   ],
-  //                 ),
-  //               );
-  //             }else{
-  //               return CircularProgressIndicator();
-  //             }
-  //           }
-  //       ),
-  //       Positioned(
-  //         bottom: 120,
-  //         right: 30,
-  //         child: Container(
-  //           height: 50,
-  //           width: 50,
-  //           decoration: BoxDecoration(
-  //               color: secondcolor, borderRadius: BorderRadius.circular(25.0)),
-  //           child: Center(
-  //             child: IconButton(
-  //               icon: Icon(
-  //                 Icons.play_arrow,
-  //                 color: Colors.white,
-  //               ),
-  //               onPressed: () {
-  //
-  //               },
-  //               // color: thirdcolor,
-  //             ),
-  //           ),
-  //         ),
-  //       )
-  //     ],
-  //   );
-  // }
 
   slide(item, genres) {
     incre = genres.length;
@@ -338,39 +325,54 @@ class _MyHomePageState extends State<MyHomePage> {
                         Wrap(
                           alignment: WrapAlignment.center,
                           runAlignment: WrapAlignment.center,
-                         // crossAxisAlignment: WrapCrossAlignment.center,
+                          //crossAxisAlignment: WrapCrossAlignment.center,
                           spacing: 5.0,
                           runSpacing: 5.0,
                           children: [
                             // for(int i = 0; i <= ic; i++)
                             ic >= 1 ? Text(
                               genres[0]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                  color: Colors.white,
                                 fontFamily: 'PopBold',
                                 fontSize: 15,
                               ),
                             ) :SizedBox(),
-                            ic > 1 ? Icon(
-                              Icons.arrow_right,
-                              color: Colors.white,
-                              size: 20,
+                            ic > 1 ? Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Icon(
+                                Icons.arrow_right,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ) : SizedBox(),
                             ic >= 2 ? Text(
                               genres[1]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontFamily: 'PopBold',
                                 fontSize: 15,
                               ),
                             ) :SizedBox(),
-                            ic > 2 ? Icon(
-                              Icons.arrow_right,
-                              color: Colors.white,
-                              size: 20,
+                            ic > 2 ? Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: Icon(
+                                Icons.arrow_right,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ) :SizedBox(),
                             ic >= 3 ? Text(
                               genres[2]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontFamily: 'PopBold',
@@ -447,16 +449,22 @@ class _MyHomePageState extends State<MyHomePage> {
                             height: 1,
                             color: fisrtcolor,
                           ),
+                          alignment: Alignment.centerRight,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
                             fontFamily: 'PopRegular',
                           ),
-                          onChanged: (e) async {
+                          onChanged: (e)  {
                             setState(() {
                               currentlanguage = e!;
                             });
                             switch (e!) {
+                              case "All":
+                                value.changeLocale("fr", "All");
+                                //await videosProviders.allMovies(1);
+                                break;
+
                               case "Français":
                                 value.changeLocale("fr", "Français");
                                    //await videosProviders.allMovies(1);
@@ -464,9 +472,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
                               case "Anglais":
                                 value.changeLocale("en", "Anglais");
-                                  //await videosProviders.allMovies(1);
                                 break;
                             }
+                            loadLanguage();
+                            findAllVideos(lang);
                           },
                           items: langues
                               .map<DropdownMenuItem<String>>((String value) {
@@ -551,32 +560,37 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         listViewSeries(),
-        Padding(
-          padding: EdgeInsets.only(left: 14, right: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Web Series',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontFamily: 'PopBold',
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                ),
+        webSeries == [] || webSeries.length <= 0 ? SizedBox() : Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(left: 14, right: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Web Series',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontFamily: 'PopBold',
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_forward_ios,
+                      color: secondcolor,
+                      size: 15,
+                    ),
+                    onPressed: null,
+                  ),
+                ],
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.arrow_forward_ios,
-                  color: secondcolor,
-                  size: 15,
-                ),
-                onPressed: null,
-              ),
-            ],
-          ),
+            ),
+            listViewWebSeries()
+          ],
         ),
-        listViewWebSeries(),
+       // webSeries == [] ? SizedBox() :listViewWebSeries(),
         Padding(
           padding: EdgeInsets.only(left: 14, right: 2),
           child: Row(
@@ -813,16 +827,19 @@ class _MyHomePageState extends State<MyHomePage> {
                       SizedBox(
                         height: 5,
                       ),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        runAlignment: WrapAlignment.center,
-                        // crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 5.0,
-                        runSpacing: 5.0,
+                      Row(
+                        // alignment: WrapAlignment.center,
+                        // runAlignment: WrapAlignment.center,
+                        // // crossAxisAlignment: WrapCrossAlignment.center,
+                        // spacing: 5.0,
+                        // runSpacing: 5.0,
                         children: [
                           // for(int i = 0; i <= ic; i++)
                           ic >= 1 ? Text(
                             films[index][1][0]["nom"].toString(),
+                            softWrap: true,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 8,
@@ -835,6 +852,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           ) : SizedBox(),
                           ic >= 2 ? Text(
                             films[index][1][1]["nom"].toString(),
+                            softWrap: true,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 8,
@@ -845,11 +865,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white,
                             size: 10,
                           ) :SizedBox(),
-                          ic >= 3 ? Text(
-                            films[index][1][2]["nom"].toString(),
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 8,
+                          ic >= 3 ? Expanded(
+                            child: Text(
+                              films[index][1][2]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 8,
+                              ),
                             ),
                           ) :SizedBox(),
                         ],
@@ -1145,12 +1170,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       SizedBox(
                         height: 5,
                       ),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        runAlignment: WrapAlignment.center,
-                        // crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 5.0,
-                        runSpacing: 5.0,
+                      Row(
+                        // alignment: WrapAlignment.center,
+                        // runAlignment: WrapAlignment.center,
+                        // // crossAxisAlignment: WrapCrossAlignment.center,
+                        // spacing: 5.0,
+                        // runSpacing: 5.0,
                         children: [
                           // for(int i = 0; i <= ic; i++)
                           ic >= 1 ? Text(
@@ -1177,11 +1202,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white,
                             size: 10,
                           ) :SizedBox(),
-                          ic >= 3 ? Text(
-                            series[index][1][2]["nom"].toString(),
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 8,
+                          ic >= 3 ? Expanded(
+                            child: Text(
+                              series[index][1][2]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 8,
+                              ),
                             ),
                           ) :SizedBox(),
                         ],
@@ -1270,12 +1300,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       SizedBox(
                         height: 5,
                       ),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        runAlignment: WrapAlignment.center,
-                        // crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 5.0,
-                        runSpacing: 5.0,
+                      Row(
+                        // alignment: WrapAlignment.center,
+                        // runAlignment: WrapAlignment.center,
+                        // // crossAxisAlignment: WrapCrossAlignment.center,
+                        // spacing: 5.0,
+                        // runSpacing: 5.0,
                         children: [
                           // for(int i = 0; i <= ic; i++)
                           ic >= 1 ? Text(
@@ -1302,11 +1332,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white,
                             size: 10,
                           ) :SizedBox(),
-                          ic >= 3 ? Text(
-                            webSeries[index][1][2]["nom"].toString(),
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 8,
+                          ic >= 3 ? Expanded(
+                            child: Text(
+                              webSeries[index][1][2]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 8,
+                              ),
                             ),
                           ) :SizedBox(),
                         ],
@@ -1392,12 +1427,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       SizedBox(
                         height: 5,
                       ),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        runAlignment: WrapAlignment.center,
-                        // crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 5.0,
-                        runSpacing: 5.0,
+                      Row(
+                        // alignment: WrapAlignment.center,
+                        // runAlignment: WrapAlignment.center,
+                        // // crossAxisAlignment: WrapCrossAlignment.center,
+                        // spacing: 5.0,
+                        // runSpacing: 5.0,
                         children: [
                           // for(int i = 0; i <= ic; i++)
                           ic >= 1 ? Text(
@@ -1424,11 +1459,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white,
                             size: 10,
                           ) :SizedBox(),
-                          ic >= 3 ? Text(
-                            novelas[index][1][2]["nom"].toString(),
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 8,
+                          ic >= 3 ? Expanded(
+                            child: Text(
+                              novelas[index][1][2]["nom"].toString(),
+                              softWrap: true,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 8,
+                              ),
                             ),
                           ) :SizedBox(),
                         ],
