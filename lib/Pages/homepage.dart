@@ -77,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   allNotificationNonlu() async{
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
+   // await videoprovider.allNotificationNonLu().delayed(Duration(seconds: 2))
     List<dynamic> n = await videoprovider.allNotificationNonLu();
     setState(() {
       notificationsNonLu = n;

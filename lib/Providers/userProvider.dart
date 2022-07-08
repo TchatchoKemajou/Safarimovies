@@ -125,16 +125,29 @@ class UserProvider with ChangeNotifier{
       "password": _password
     };
   }
+
+
   Map<String, dynamic> tomapChangeName(name){
     return {
       "name": name
     };
   }
+
+
   Map<String, dynamic> tomapChangePass(){
     print(_oldpass + "  et " + _password);
     return {
       "oldpassword": _oldpass,
       "newpassword": _password
+    };
+  }
+
+
+  Map<String, dynamic> tomapChangeForgetPass(){
+    print(_oldpass + "  et " + _password);
+    return {
+      "password": _password,
+      "password_confirmation": _password
     };
   }
 
@@ -153,6 +166,19 @@ class UserProvider with ChangeNotifier{
     var body = json.decode(res.body);
     _loginMessage = body['message'];
     notifyListeners();
+  }
+
+  changeForgetPassword(id) async{
+    var res = await userService.resetPassword(tomapChangeForgetPass(), id);
+    var body = json.decode(res.body);
+    print(body);
+    if(body['message'] == null){
+      _loginMessage = "success";
+      notifyListeners();
+    }else{
+
+    }
+    //_loginMessage = body['message'];
   }
 
   updateName(id, name) async{
@@ -262,10 +288,6 @@ class UserProvider with ChangeNotifier{
     print(tomapsendMail());
     var res = await userService.sendmailToConfirmAccount(tomapsendMail());
     var body = json.decode(res.body);
-    //print(body);
-   //_emailMessage = "success";
-   //  notifyListeners();
-   //  loadUser(body);
     if(body["message"] != null){
       _emailMessage = "error";
       notifyListeners();

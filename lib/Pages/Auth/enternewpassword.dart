@@ -240,7 +240,7 @@ class _EnterNewPasswordState extends State<EnterNewPassword> {
                   setState(() {
                     isLoading = true;
                   });
-                  await userprovider.updatePassword(widget.id);
+                  await userprovider.changeForgetPassword(widget.id);
                   if(userprovider.loginMessage == "success"){
                     setState(() {
                       isLoading = false;

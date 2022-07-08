@@ -151,22 +151,6 @@ class VideosProviders with ChangeNotifier{
     notifyListeners();
   }
 
-   Future<List<dynamic>> allMovies(String lang) async{
-    final res = await videosService.getAllMovies(lang);
-    //print(json.decode(res.body));
-    return json.decode(res.body);
-  }
-
-  // ifSimilaire(int id) async{
-  //   final res = await videosService.getInfosMovies(id);
-  //   // List<dynamic> test = json.decode(res.body)[4];
-  //   // print("similairelist" + "$test");
-  //   if(json.decode(res.body)[4].length >= 1){
-  //     _similaire = true;
-  //     notifyListeners();
-  //   }else _similaire = false;
-  //   notifyListeners();
-  // }
 
   readNotification() async{
     var res = await videosService.readNotification();
@@ -260,6 +244,12 @@ Future<List<dynamic>> getAllFavoris() async{
   Future<List<dynamic>> episodes(int i) async{
     // int id = (_videoCreatorId as int);
     final res = await videosService.getEpisode(i);
+    return json.decode(res.body);
+  }
+
+  Future<List<dynamic>> allMovies(String lang) async{
+    final res = await videosService.getAllMovies(lang);
+    //print(json.decode(res.body));
     return json.decode(res.body);
   }
 

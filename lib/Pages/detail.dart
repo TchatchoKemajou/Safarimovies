@@ -24,6 +24,7 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   int incre = 0;
   String lang = "fr";
+  String isFavorite = "false";
   String language = "Français";
   String saison = "Saison 1";
   List<dynamic> afficheinfos = [];
@@ -58,8 +59,10 @@ class _DetailPageState extends State<DetailPage> {
   detailPage() async{
     final videoprovider = Provider.of<VideosProviders>(context, listen: false);
     List<dynamic> d = await videoprovider.infosMovies(lang);
+    await videoprovider.verifyFavori();
    // final s = await videoprovider.allSaisons(widget.film["creator_id"]);
     setState(() {
+      isFavorite = videoprovider.isfavori; 
       afficheinfos = d[2];
       acteurs = d[1];
       similaire = d[4];
@@ -119,10 +122,10 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
   appBar() {
-    final videoprovider2 = Provider.of<VideosProviders>(context);
-    setState(() {
-      videoprovider2.verifyFavori();
-    });
+     final videoprovider2 = Provider.of<VideosProviders>(context);
+    // setState(() {
+    //   videoprovider2.verifyFavori();
+    // });
     return AppBar(
       automaticallyImplyLeading: true,
       title: Text(
@@ -136,26 +139,15 @@ class _DetailPageState extends State<DetailPage> {
       actions: [
         InkWell(
           child: Icon(
-            videoprovider2.isfavori == "vrai" ? Icons.favorite :Icons.favorite_outline_rounded,
-            color: videoprovider2.isfavori == "vrai" ? Colors.red :Colors.white,
+            isFavorite == "vrai" ? Icons.favorite :Icons.favorite_outline_rounded,
+            color: isFavorite == "vrai" ? Colors.red :Colors.white,
           ),
           onTap: () async{
-            if(videoprovider2.isfavori == "faux"){
-              await videoprovider2.addToFavorie(widget.film["creator_id"]);
-              if(videoprovider2.ifAddorRetrive == "success"){
-                setState(() {
-                  videoprovider2.Changeisfavori = "vrai";
-                });
-              }
-            }else{
-              videoprovider2.Changeisfavori = "faux";
-              await videoprovider2.deleteToFavorie(widget.film["creator_id"]);
-              if(videoprovider2.ifAddorRetrive == "success"){
-                setState(() {
-                  videoprovider2.Changeisfavori = "faux";
-                });
-                // videoprovider.loadFilm(widget.film);
-              }
+            await videoprovider2.addToFavorie(widget.film["creator_id"]);
+            if(videoprovider2.ifAddorRetrive == "success"){
+              setState(() {
+                isFavorite = videoprovider2.isfavori;
+              });
             }
           },
         )
